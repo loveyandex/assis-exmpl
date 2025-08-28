@@ -387,21 +387,43 @@ const openai = createOpenAI({
   apiKey: process.env.CEREBRAS_API_KEY,
 });
 
+// GET handler for resuming streams
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const chatId = searchParams.get('chatId');
+
+  if (!chatId) {
+    return new Response('chatId is required', { status: 400 });
+  }
+
+  try {
+    const messages = await loadChat(chatId);
+    return Response.json({ messages });
+  } catch (error) {
+    console.error('❌ API GET: Failed to load chat:', error);
+    return new Response('Chat not found', { status: 404 });
+  }
+}
+
 export async function POST(req: Request) {
   const { messages, chatId }: { messages: ChatMessage[]; chatId: string } = await req.json();
+
+  console.log('🔍 API: Received request with chatId:', chatId, 'and', messages.length, 'messages');
 
   // Load previous messages from database
   let previousMessages: UIMessage[] = [];
   try {
     previousMessages = await loadChat(chatId);
+    console.log('📚 API: Loaded', previousMessages.length, 'previous messages from database');
   } catch (error) {
-    console.error('Failed to load chat:', error);
+    console.error('❌ API: Failed to load chat:', error);
     // If chat doesn't exist, start with empty history
     previousMessages = [];
   }
 
   // Append new message to previous messages
   const allMessages = [...previousMessages, ...messages];
+  console.log('📝 API: Total messages to process:', allMessages.length);
 
   // Validate loaded messages against tools
   let validatedMessages: UIMessage[];
@@ -412,7 +434,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     if (error instanceof TypeValidationError) {
-      console.error('Database messages validation failed:', error);
+      console.error('⚠️ API: Database messages validation failed:', error);
       // Start with empty history if validation fails
       validatedMessages = messages;
     } else {
@@ -430,11 +452,14 @@ export async function POST(req: Request) {
 
   return result.toUIMessageStreamResponse({
     originalMessages: validatedMessages,
-    onFinish: ({ messages }) => {
-      // Save messages to database
-      saveChat(chatId, messages).catch(error => {
-        console.error('Failed to save chat:', error);
-      });
+    onFinish: async ({ messages }) => {
+      console.log('💾 API: onFinish called with', messages.length, 'messages, saving to chatId:', chatId);
+      try {
+        await saveChat(chatId, messages);
+        console.log('✅ API: Successfully saved chat to database');
+      } catch (error) {
+        console.error('❌ API: Failed to save chat:', error);
+      }
     },
   });
 }

@@ -75,15 +75,22 @@ export async function saveChat(chatId: string, messages: UIMessage[]): Promise<v
   }
 }
 
-export async function listChats() {
-  return await prisma.chat.findMany({
-    orderBy: { updatedAt: 'desc' },
-    include: {
-      _count: {
-        select: { messages: true },
+export async function listChats(limit: number = 20, offset: number = 0) {
+  const [chats, total] = await Promise.all([
+    prisma.chat.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        _count: {
+          select: { messages: true },
+        },
       },
-    },
-  });
+      take: limit,
+      skip: offset,
+    }),
+    prisma.chat.count(),
+  ]);
+
+  return { chats, total };
 }
 
 export async function deleteChat(id: string): Promise<void> {
