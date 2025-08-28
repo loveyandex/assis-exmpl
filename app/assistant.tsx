@@ -3,6 +3,7 @@
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { Thread } from "@/components/assistant-ui/thread";
+import { UIMessage } from "ai";
 import {
   SidebarInset,
   SidebarProvider,
@@ -19,8 +20,17 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-export const Assistant = () => {
-  const runtime = useChatRuntime();
+export const Assistant = ({ 
+  chatId, 
+  initialMessages = [] 
+}: { 
+  chatId?: string; 
+  initialMessages?: UIMessage[] 
+}) => {
+  const runtime = useChatRuntime({
+    id: chatId,
+    messages: initialMessages,
+  });
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
