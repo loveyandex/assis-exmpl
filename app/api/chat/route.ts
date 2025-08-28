@@ -28,6 +28,7 @@ const tools = {
       const weather = {
         value: 24,
         description: 'Sunny',
+
       };
 
       return `It is currently ${weather.value}°${unit} and ${weather.description} in ${city}!`;
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(5),
     tools,
-    system: `You are Xmasih  that can provide weather information. Use the getWeather tool when the user asks about the weather.`,
+    system: `You are Xmasih  that can provide weather information. Use the getWeather tool when the user asks about the weather.ask for the city and unit (C or F).`,
   });
 
   return result.toUIMessageStreamResponse();
