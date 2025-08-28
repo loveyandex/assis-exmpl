@@ -47,7 +47,7 @@ const tools = {
           currentPage += 1;
         }
 
-        if (!allProjects.length) return "No projects found.";
+        if (!allProjects.length) return "No groups found.";
 
         const result = [`Total projects retrieved: ${allProjects.length}`];
         for (const project of allProjects) {
@@ -215,7 +215,7 @@ const tools = {
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
-      const encodedContent = Buffer.from(content).toString('base64');
+      const encodedContent = content;
       const data = {
         branch,
         content: encodedContent,
@@ -257,7 +257,7 @@ const tools = {
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
-      const encodedContent = Buffer.from(content).toString('base64');
+      const encodedContent =content;
       const data = {
         branch,
         content: encodedContent,
@@ -321,6 +321,56 @@ const tools = {
       }
     },
   }),
+  listAllGroups: tool({
+    description: 'List all groups accessible to the authenticated user in the GitLab instance.',
+    inputSchema: z.object({}),
+    execute: async () => {
+      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
+      const gitlabToken = process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+
+      const endpoint = "groups";
+      const params: { order_by: string; sort: string; per_page: number; page?: number } = {
+        order_by: "id",
+        sort: "asc",
+        per_page: 100,
+      };
+      let allGroups: any[] = [];
+      let currentPage = 1;
+
+      try {
+        while (true) {
+          params.page = currentPage;
+          const response = await fetch(`${gitlabUrl}/${endpoint}?${new URLSearchParams(params as any).toString()}`, {
+            headers: {
+              "PRIVATE-TOKEN": gitlabToken,
+              "Content-Type": "application/json",
+            },
+          });
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const groups: any[] = await response.json();
+          if (!groups.length) break;
+          allGroups = allGroups.concat(groups);
+          currentPage += 1;
+        }
+
+        if (!allGroups.length) return "No groups found.";
+
+        const result = [`Total groups retrieved: ${allGroups.length}`];
+        for (const group of allGroups) {
+          const description = group.description || "No description";
+          const visibility = group.visibility || "Unknown";
+          const memberCount = group.member_count || "Unknown";
+          result.push(
+            `group_id: ${group.id}, group name: ${group.name} (path: ${group.path || 'Unknown'}), description: ${description}, visibility: ${visibility}, members: ${memberCount}`
+          );
+        }
+        return result.join("\n");
+      } catch (e) {
+        return `Error listing groups: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    },
+  }),
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof tools>;
@@ -340,7 +390,7 @@ export async function POST(req: Request) {
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(5),
     tools,
-    system: `You are Xmasih, an AI assistant that can manage GitLab projects. Use the appropriate tool for the task: listAllProjects to list projects, createProject to create a new project, updateProject to modify a project, deleteProject to remove a project, getReadmeContent to fetch README content, createReadme to create a README with user input, updateReadme to update a README, or deleteReadme to remove a README. Ask for required parameters when needed and confirm actions (e.g., 'Confirm create project with name=X, namespaceId=Y?') before executing. For createReadme, prompt the user for content (e.g., 'What should the README content be?') after project creation or independently.`,
+    system: `You are Xmasih, an AI assistant that can manage GitLab projects and groups. Use the appropriate tool for the task: listAllProjects to list projects, createProject to create a new project, updateProject to modify a project, deleteProject to remove a project, getReadmeContent to fetch README content, createReadme to create a README with user input, updateReadme to update a README, deleteReadme to remove a README, or listAllGroups to list groups. Ask for required parameters when needed and confirm actions (e.g., 'Confirm create project with name=X, namespaceId=Y?') before executing. For createReadme, prompt the user for content (e.g., 'What should the README content be?') after project creation or independently.`,
   });
 
   return result.toUIMessageStreamResponse();
