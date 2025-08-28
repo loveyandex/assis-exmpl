@@ -33,20 +33,21 @@ export async function loadChat(id: string): Promise<UIMessage[]> {
     throw new Error('Chat not found');
   }
 
-  return chat.messages.map((message) => ({
+  return chat.messages.map((message: any) => ({
     id: message.id,
     role: message.role as 'user' | 'assistant',
     content: message.content,
-    toolCalls: message.toolCalls as any,
-    metadata: message.metadata as any,
+    toolCalls: message.toolCalls ? JSON.parse(message.toolCalls) : undefined,
+    metadata: message.metadata ? JSON.parse(message.metadata) : undefined,
   })) as UIMessage[];
 }
 
 export async function saveChat(chatId: string, messages: UIMessage[]): Promise<void> {
   // Update chat title based on first user message
   const firstUserMessage = messages.find(m => m.role === 'user');
-  if (firstUserMessage) {
-    const title = firstUserMessage.content.slice(0, 50) + (firstUserMessage.content.length > 50 ? '...' : '');
+  if (firstUserMessage && 'content' in firstUserMessage) {
+    const content = firstUserMessage.content as string;
+    const title = content.slice(0, 50) + (content.length > 50 ? '...' : '');
     await prisma.chat.update({
       where: { id: chatId },
       data: { title },
@@ -58,17 +59,17 @@ export async function saveChat(chatId: string, messages: UIMessage[]): Promise<v
     await prisma.message.upsert({
       where: { id: message.id },
       update: {
-        content: message.content,
-        toolCalls: message.toolCalls,
-        metadata: message.metadata,
+        content: 'content' in message ? (message.content as string) : '',
+        toolCalls: 'toolCalls' in message && message.toolCalls ? JSON.stringify(message.toolCalls) : null,
+        metadata: 'metadata' in message && message.metadata ? JSON.stringify(message.metadata) : null,
       },
       create: {
         id: message.id,
         role: message.role,
-        content: message.content,
+        content: 'content' in message ? (message.content as string) : '',
         chatId,
-        toolCalls: message.toolCalls,
-        metadata: message.metadata,
+        toolCalls: 'toolCalls' in message && message.toolCalls ? JSON.stringify(message.toolCalls) : null,
+        metadata: 'metadata' in message && message.metadata ? JSON.stringify(message.metadata) : null,
       },
     });
   }
