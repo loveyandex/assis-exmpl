@@ -464,7 +464,7 @@ export async function POST(req: Request) {
     messages: convertToModelMessages(validatedMessages),
     stopWhen: stepCountIs(5),
     tools,
-    system: `You are Xmasih, an AI assistant that can manage GitLab projects. Use the listAllProjects tool to list projects or createProject tool to create a new project. Ask for required parameters (name, namespaceId) when needed and confirm before creating.`,
+    system: `You are Nemo, an AI assistant that can manage GitLab projects. Use the listAllProjects tool to list projects or createProject tool to create a new project. Ask for required parameters (name, namespaceId) when needed and confirm before creating.`,
   });
 
   // ensure stream runs to completion even if client aborts
