@@ -16,23 +16,10 @@ interface Chat {
   title: string
   timestamp: string
   category: 'yesterday' | 'last7days' | 'thisyear'
+  excerpt?: string
 }
 
-const mockChats: Chat[] = [
-  { id: '1', title: 'Python Tools Class Implementation', timestamp: '24 hours ago', category: 'yesterday' },
-  { id: '2', title: 'Docker Compose GitLab LDAP Setup', timestamp: '4 days ago', category: 'last7days' },
-  { id: '3', title: 'Clarifying Project Details for Collaboration', timestamp: '7 days ago', category: 'last7days' },
-  { id: '4', title: 'مشروع مكرر: توضیح ومساعدة بالعربية', timestamp: 'Aug 14', category: 'thisyear' },
-  { id: '5', title: 'REST API for Camera AI Admin', timestamp: 'Aug 5', category: 'thisyear' },
-  { id: '6', title: 'Expressions of Love and Technology', timestamp: 'Jul 23', category: 'thisyear' },
-  { id: '7', title: 'Brief Exchange on Message Completion', timestamp: 'Jul 15', category: 'thisyear' },
-  { id: '8', title: 'CelestiaGPT: Introduction and Inquiry', timestamp: 'Jul 15', category: 'thisyear' },
-  { id: '9', title: 'Friendly greeting', timestamp: 'Jul 14', category: 'thisyear' },
-  { id: '10', title: 'Solana Price Drop from All-Time High', timestamp: 'Jul 14', category: 'thisyear' },
-  { id: '11', title: 'Sending Chat Messages with Images in Python', timestamp: 'Jul 2', category: 'thisyear' },
-]
-
-interface SearchModalProps {
+    interface SearchModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onChatSelect?: (chatId: string) => void
@@ -40,27 +27,91 @@ interface SearchModalProps {
 
 export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [filteredChats, setFilteredChats] = React.useState(mockChats)
+  const [chats, setChats] = React.useState<Chat[]>([])
+  const [loading, setLoading] = React.useState(false)
 
+  // Fetch all chats on mount
   React.useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredChats(mockChats)
-    } else {
-      const filtered = mockChats.filter(chat =>
-        chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      setFilteredChats(filtered)
+    const fetchChats = async () => {
+      try {
+        const response = await fetch('/api/chats?page=1&limit=50')
+        const data = await response.json()
+        const formattedChats = data.chats.map((chat: any) => ({
+          id: chat.id,
+          title: chat.title || 'Untitled Chat',
+          timestamp: formatTimestamp(chat.updatedAt),
+          category: getCategory(chat.updatedAt),
+          excerpt: chat._count?.messages > 0 ? `${chat._count.messages} messages` : 'No messages'
+        }))
+        setChats(formattedChats)
+      } catch (error) {
+        console.error('Failed to fetch chats:', error)
+      }
     }
+    fetchChats()
+  }, [])
+
+  // Search functionality
+  React.useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    const searchChats = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+        const data = await response.json()
+        const formattedResults = data.results.map((chat: any) => ({
+          id: chat.id,
+          title: chat.title,
+          timestamp: formatTimestamp(chat.updatedAt),
+          category: getCategory(chat.updatedAt),
+          excerpt: chat.excerpt
+        }))
+        setChats(formattedResults)
+      } catch (error) {
+        console.error('Search failed:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchChats, 300) // Debounce search
+    return () => clearTimeout(timeoutId)
   }, [searchQuery])
 
   const groupedChats = React.useMemo(() => {
     const groups = {
-      yesterday: filteredChats.filter(chat => chat.category === 'yesterday'),
-      last7days: filteredChats.filter(chat => chat.category === 'last7days'),
-      thisyear: filteredChats.filter(chat => chat.category === 'thisyear')
+      yesterday: chats.filter((chat: Chat) => chat.category === 'yesterday'),
+      last7days: chats.filter((chat: Chat) => chat.category === 'last7days'),
+      thisyear: chats.filter((chat: Chat) => chat.category === 'thisyear')
     }
     return groups
-  }, [filteredChats])
+  }, [chats])
+
+  // Helper functions
+  const formatTimestamp = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    
+    if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)} hours ago`
+    } else if (diffInHours < 168) { // 7 days
+      return `${Math.floor(diffInHours / 24)} days ago`
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+  }
+
+  const getCategory = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    
+    if (diffInHours < 24) return 'yesterday'
+    if (diffInHours < 168) return 'last7days' // 7 days
+    return 'thisyear'
+  }
 
   const handleChatClick = (chatId: string) => {
     onChatSelect?.(chatId)
@@ -69,8 +120,8 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 bg-sidebar border-sidebar-border">
-        <DialogHeader className="p-4 pb-2">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-none p-8 bg-sidebar border-sidebar-border m-4">
+        <DialogHeader className="pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -82,7 +133,7 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
           </div>
         </DialogHeader>
         
-        <div className="px-4 pb-2">
+        <div className="pb-4">
           <div className="text-sm font-medium text-sidebar-foreground mb-2">Actions</div>
           <Button
             variant="ghost"
@@ -95,8 +146,13 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
         </div>
 
         <div className="flex-1 overflow-y-auto max-h-96">
-          {groupedChats.yesterday.length > 0 && (
-            <div className="px-4 pb-2">
+          {loading && (
+            <div className="text-center py-4 text-muted-foreground">
+              Searching...
+            </div>
+          )}
+          {!loading && groupedChats.yesterday.length > 0 && (
+            <div className="pb-4">
               <div className="text-sm font-medium text-sidebar-foreground mb-2 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Yesterday
@@ -114,8 +170,8 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
             </div>
           )}
 
-          {groupedChats.last7days.length > 0 && (
-            <div className="px-4 pb-2">
+          {!loading && groupedChats.last7days.length > 0 && (
+            <div className="pb-4">
               <div className="text-sm font-medium text-sidebar-foreground mb-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Last 7 Days
@@ -133,8 +189,8 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
             </div>
           )}
 
-          {groupedChats.thisyear.length > 0 && (
-            <div className="px-4 pb-2">
+          {!loading && groupedChats.thisyear.length > 0 && (
+            <div className="pb-4">
               <div className="text-sm font-medium text-sidebar-foreground mb-2 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" />
                 This Year
@@ -149,6 +205,11 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
                   <span className="text-xs text-muted-foreground">{chat.timestamp}</span>
                 </div>
               ))}
+            </div>
+          )}
+          {!loading && chats.length === 0 && searchQuery.trim() && (
+            <div className="text-center py-8 text-muted-foreground">
+              No chats found for "{searchQuery}"
             </div>
           )}
         </div>

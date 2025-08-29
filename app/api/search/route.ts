@@ -9,12 +9,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Search in chat titles
+    // Search in chat titles (SQLite doesn't support case-insensitive search natively)
     const titleResults = await prisma.chat.findMany({
       where: {
         title: {
           contains: query,
-          mode: 'insensitive',
         },
       },
       include: {
@@ -23,6 +22,7 @@ export async function GET(request: Request) {
           orderBy: { createdAt: 'desc' },
         },
       },
+      orderBy: { updatedAt: 'desc' },
       take: 10,
     });
 
@@ -31,12 +31,12 @@ export async function GET(request: Request) {
       where: {
         content: {
           contains: query,
-          mode: 'insensitive',
         },
       },
       include: {
         chat: true,
       },
+      orderBy: { createdAt: 'desc' },
       take: 10,
     });
 
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     const results = uniqueResults.map(chat => ({
       id: chat.id,
       title: chat.title || 'Untitled Chat',
-      excerpt: chat.messages?.[0]?.content?.slice(0, 100) + '...' || 'No messages',
+      excerpt: (chat as any).messages?.[0]?.content?.slice(0, 100) + '...' || 'No messages',
       updatedAt: chat.updatedAt,
     }));
 
