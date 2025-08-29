@@ -14,7 +14,7 @@ import {
   tool,
 } from 'ai';
 import { z } from 'zod';
-import { loadChat, saveChat } from '@/lib/db';
+import { loadChat, saveChat, createChat } from '@/lib/db';
 
 
 
@@ -406,14 +406,29 @@ export async function GET(request: Request) {
 }
 
 export async function POST(req: Request) {
-  const { messages, chatId }: { messages: ChatMessage[]; chatId: string } = await req.json();
+  const { messages, chatId }: { messages: ChatMessage[]; chatId?: string } = await req.json();
 
   console.log('🔍 API: Received request with chatId:', chatId, 'and', messages.length, 'messages');
+
+  // If no chatId is provided, create a new chat
+  let currentChatId: string;
+  if (!chatId) {
+    try {
+      currentChatId = await createChat();
+      console.log('📝 API: Created new chat with ID:', currentChatId);
+    } catch (error) {
+      console.error('❌ API: Failed to create new chat:', error);
+      return new Response('Failed to create chat', { status: 500 });
+    }
+  } else {
+    currentChatId = chatId;
+    console.log('📝 API: Using existing chat with ID:', currentChatId);
+  }
 
   // Load previous messages from database
   let previousMessages: UIMessage[] = [];
   try {
-    previousMessages = await loadChat(chatId);
+    previousMessages = await loadChat(currentChatId);
     console.log('📚 API: Loaded', previousMessages.length, 'previous messages from database');
   } catch (error) {
     console.error('❌ API: Failed to load chat:', error);
@@ -453,9 +468,9 @@ export async function POST(req: Request) {
   return result.toUIMessageStreamResponse({
     originalMessages: validatedMessages,
     onFinish: async ({ messages }) => {
-      console.log('💾 API: onFinish called with', messages.length, 'messages, saving to chatId:', chatId);
+      console.log('💾 API: onFinish called with', messages.length, 'messages, saving to chatId:', currentChatId);
       try {
-        await saveChat(chatId, messages);
+        await saveChat(currentChatId, messages);
         console.log('✅ API: Successfully saved chat to database');
       } catch (error) {
         console.error('❌ API: Failed to save chat:', error);
