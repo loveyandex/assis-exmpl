@@ -19,6 +19,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Assistant = ({ 
   chatId, 
@@ -54,6 +55,9 @@ export const Assistant = ({
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
+              <div className="ml-auto">
+                <ThemeToggle />
+              </div>
             </header>
             <div className="flex-1 overflow-hidden">
               <Thread />
