@@ -70,15 +70,18 @@ export async function saveChat(chatId: string, messages: UIMessage[]): Promise<v
 
   // Save all messages
   for (const message of messages) {
+    // guarantee an id for every message (server authority)
+    const messageId = (message as any)?.id ?? crypto.randomUUID();
+
     await prisma.message.upsert({
-      where: { id: message.id },
+      where: { id: messageId },
       update: {
         content: getText(message as any),
         toolCalls: 'toolCalls' in message && message.toolCalls ? JSON.stringify(message.toolCalls) : null,
         metadata: 'metadata' in message && message.metadata ? JSON.stringify(message.metadata) : null,
       },
       create: {
-        id: message.id,
+        id: messageId,
         role: message.role,
         content: getText(message as any),
         chatId,

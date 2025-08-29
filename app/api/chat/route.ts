@@ -406,7 +406,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(req: Request) {
-  const { messages, chatId }: { messages: ChatMessage[]; chatId?: string } = await req.json();
+  const body = await req.json();
+  const messages = (body?.messages ?? []) as ChatMessage[];
+  const chatId = (body?.id ?? body?.chatId) as string | undefined;
 
   console.log('🔍 API: Received request with chatId:', chatId, 'and', messages.length, 'messages');
 
