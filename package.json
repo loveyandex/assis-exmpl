@@ -10,7 +10,7 @@
     "setup": "node scripts/setup.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "std": "prisma studio"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.10",
