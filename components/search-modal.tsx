@@ -125,21 +125,22 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-4rem)] h-[calc(100vh-2rem)] max-w-none p-8 bg-sidebar border-sidebar-border mx-8 my-4">
-        <DialogHeader className="pb-4">
+      <DialogContent className="fixed left-[3rem] top-[2rem] right-[3rem] bottom-[2rem] w-auto h-auto max-w-none p-8 bg-sidebar border-sidebar-border rounded-3xl translate-x-0 translate-y-0">
+        <DialogTitle className="sr-only">Search Chats</DialogTitle>
+        <DialogHeader className="pb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-sidebar-accent border-sidebar-border"
+              className="pl-10 bg-sidebar-accent border-sidebar-border h-12 text-base"
             />
           </div>
         </DialogHeader>
         
-        <div className="pb-4">
-          <div className="text-sm font-medium text-sidebar-foreground mb-2">Actions</div>
+        <div className="pb-2">
+          <div className="text-sm font-medium text-sidebar-foreground mb-1">Actions</div>
           <Button
             variant="ghost"
             className="w-full justify-start gap-2 h-10 bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground"
@@ -150,7 +151,7 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto max-h-96">
+        <div className="flex-1 overflow-y-auto">
           {loading && (
             <div className="text-center py-4 text-muted-foreground">
               Searching...
