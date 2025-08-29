@@ -467,12 +467,34 @@ export async function POST(req: Request) {
     system: `You are Xmasih, an AI assistant that can manage GitLab projects. Use the listAllProjects tool to list projects or createProject tool to create a new project. Ask for required parameters (name, namespaceId) when needed and confirm before creating.`,
   });
 
+  // ensure stream runs to completion even if client aborts
+  result.consumeStream();
+
   return result.toUIMessageStreamResponse({
     originalMessages: validatedMessages,
+    // generate a stable server-side id when missing/blank (AI SDK v5)
+    generateMessageId: () => crypto.randomUUID(),
     onFinish: async ({ messages }) => {
-      console.log('💾 API: onFinish called with', messages.length, 'messages, saving to chatId:', currentChatId);
+      // normalize empty string ids to undefined so generateMessageId kicks in next round
+      const normalized = messages.map((m: any) => ({
+        ...m,
+        id: m?.id && String(m.id).length > 0 ? m.id : crypto.randomUUID(),
+      }));
+
+      // de-duplicate by id while preserving order (keeps last occurrence)
+      const seen = new Set<string>();
+      const deduped: any[] = [];
+      for (let i = normalized.length - 1; i >= 0; i--) {
+        const msg = normalized[i];
+        if (!seen.has(msg.id)) {
+          seen.add(msg.id);
+          deduped.unshift(msg);
+        }
+      }
+
+      console.log('💾 API: onFinish called with', messages.length, 'messages (deduped to', deduped.length, '), saving to chatId:', currentChatId);
       try {
-        await saveChat(currentChatId, messages);
+        await saveChat(currentChatId, deduped as any);
         console.log('✅ API: Successfully saved chat to database');
       } catch (error) {
         console.error('❌ API: Failed to save chat:', error);
