@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, Lock, Clock, Calendar, CalendarDays } from "lucide-react"
+import { Search, Lock, Clock, Calendar, CalendarDays, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -15,7 +15,7 @@ interface Chat {
   id: string
   title: string
   timestamp: string
-  category: 'yesterday' | 'last7days' | 'thisyear'
+  category: 'today' | 'yesterday' | 'last7days' | 'thisyear'
   excerpt?: string
 }
 
@@ -81,6 +81,7 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
 
   const groupedChats = React.useMemo(() => {
     const groups = {
+      today: chats.filter((chat: Chat) => chat.category === 'today'),
       yesterday: chats.filter((chat: Chat) => chat.category === 'yesterday'),
       last7days: chats.filter((chat: Chat) => chat.category === 'last7days'),
       thisyear: chats.filter((chat: Chat) => chat.category === 'thisyear')
@@ -108,7 +109,11 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
     const now = new Date()
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
     
-    if (diffInHours < 24) return 'yesterday'
+    // Check if it's the same day
+    const isSameDay = date.toDateString() === now.toDateString()
+    
+    if (isSameDay) return 'today'
+    if (diffInHours < 48) return 'yesterday' // Between 24-48 hours
     if (diffInHours < 168) return 'last7days' // 7 days
     return 'thisyear'
   }
@@ -120,7 +125,7 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-none p-8 bg-sidebar border-sidebar-border m-4">
+      <DialogContent className="w-[calc(100vw-4rem)] h-[calc(100vh-2rem)] max-w-none p-8 bg-sidebar border-sidebar-border mx-8 my-4">
         <DialogHeader className="pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -149,6 +154,24 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
           {loading && (
             <div className="text-center py-4 text-muted-foreground">
               Searching...
+            </div>
+          )}
+          {!loading && groupedChats.today.length > 0 && (
+            <div className="pb-4">
+              <div className="text-sm font-medium text-sidebar-foreground mb-2 flex items-center gap-2">
+                <Sun className="h-4 w-4" />
+                Today
+              </div>
+              {groupedChats.today.map((chat) => (
+                <div
+                  key={chat.id}
+                  className="flex items-center justify-between p-2 rounded-md hover:bg-sidebar-accent cursor-pointer text-sm"
+                  onClick={() => handleChatClick(chat.id)}
+                >
+                  <span className="text-sidebar-foreground truncate">{chat.title}</span>
+                  <span className="text-xs text-muted-foreground">{chat.timestamp}</span>
+                </div>
+              ))}
             </div>
           )}
           {!loading && groupedChats.yesterday.length > 0 && (
