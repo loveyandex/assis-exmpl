@@ -24,7 +24,7 @@ CEREBRAS_API_KEY="your-cerebras-api-key"
 
 # GitLab Integration
 GITLAB_TOKEN="your-gitlab-token"
-GITLAB_URL="https://gitlab.com/api/v4"
+GITLAB_URL="https://git.lab/api/v4"
 ```
 
 ### 2. Database Setup

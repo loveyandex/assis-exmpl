@@ -13,6 +13,8 @@ interface UserSettings {
   openaiBaseUrl: string;
   openaiApiKey: string;
   modelName: string;
+  gitlabUrl: string;
+  gitlabToken: string;
 }
 
 export function SettingsModal() {
@@ -21,6 +23,8 @@ export function SettingsModal() {
     openaiBaseUrl: '',
     openaiApiKey: '',
     modelName: '',
+    gitlabUrl: '',
+    gitlabToken: '',
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,6 +45,8 @@ export function SettingsModal() {
           openaiBaseUrl: data.openaiBaseUrl || process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: data.openaiApiKey || '',
           modelName: data.modelName || process.env.NEXT_PUBLIC_MODEL_NAME || 'gpt-oss-120b',
+          gitlabUrl: data.gitlabUrl || process.env.NEXT_PUBLIC_GITLAB_URL || 'https://git.lab/api/v4',
+          gitlabToken: data.gitlabToken || '',
         });
       }
     } catch (error) {
@@ -92,8 +98,9 @@ export function SettingsModal() {
         </DialogHeader>
         
         <Tabs defaultValue="configs" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="configs">Configs</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="configs">API Config</TabsTrigger>
+            <TabsTrigger value="gitlab">GitLab Config</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
           </TabsList>
           
@@ -136,6 +143,41 @@ export function SettingsModal() {
                     value={settings.modelName}
                     onChange={(e) => handleInputChange('modelName', e.target.value)}
                     placeholder="gpt-oss-120b"
+                    disabled={loading}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="gitlab" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>GitLab Configuration</CardTitle>
+                <CardDescription>
+                  Configure your GitLab instance settings for project management.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gitlab-url">GitLab URL</Label>
+                  <Input
+                    id="gitlab-url"
+                    value={settings.gitlabUrl}
+                    onChange={(e) => handleInputChange('gitlabUrl', e.target.value)}
+                    placeholder="https://git.lab/api/v4"
+                    disabled={loading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="gitlab-token">GitLab Token</Label>
+                  <Input
+                    id="gitlab-token"
+                    type="password"
+                    value={settings.gitlabToken}
+                    onChange={(e) => handleInputChange('gitlabToken', e.target.value)}
+                    placeholder="glpat-..."
                     disabled={loading}
                   />
                 </div>

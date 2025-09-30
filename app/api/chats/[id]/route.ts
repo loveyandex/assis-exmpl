@@ -3,10 +3,11 @@ import { prisma } from '@/lib/db';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { title } = await request.json();
+    const { id } = await params;
     
     if (!title || typeof title !== 'string') {
       return NextResponse.json(
@@ -16,7 +17,7 @@ export async function PATCH(
     }
 
     const updatedChat = await prisma.chat.update({
-      where: { id: params.id },
+      where: { id },
       data: { title: title.trim() },
     });
 
@@ -32,11 +33,13 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     await prisma.chat.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

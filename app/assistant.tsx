@@ -63,12 +63,11 @@ export const Assistant = ({
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
                     <BreadcrumbLink href="#">
-                      sdoniisndisd sdnosi dsd 
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>Q </BreadcrumbPage>
+                    <BreadcrumbPage></BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>

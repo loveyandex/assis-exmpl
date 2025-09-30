@@ -40,6 +40,8 @@ model UserSettings {
   openaiBaseUrl String?  @default("https://api.openai.com/v1")
   openaiApiKey  String?
   modelName     String?  @default("gpt-oss-120b")
+  gitlabUrl     String?  @default("https://git.lab/api/v4")
+  gitlabToken   String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   

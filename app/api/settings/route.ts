@@ -14,6 +14,8 @@ export async function GET() {
           openaiBaseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: process.env.OPENAI_API_KEY || '',
           modelName: process.env.MODEL_NAME || 'gpt-oss-120b',
+          gitlabUrl: process.env.GITLAB_URL || 'https://git.lab/api/v4',
+          gitlabToken: process.env.GITLAB_TOKEN || '',
         },
       });
     }
@@ -22,6 +24,8 @@ export async function GET() {
       openaiBaseUrl: settings.openaiBaseUrl,
       openaiApiKey: settings.openaiApiKey,
       modelName: settings.modelName,
+      gitlabUrl: settings.gitlabUrl,
+      gitlabToken: settings.gitlabToken,
     });
   } catch (error) {
     console.error('Failed to fetch settings:', error);
@@ -34,7 +38,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { openaiBaseUrl, openaiApiKey, modelName } = await request.json();
+    const { openaiBaseUrl, openaiApiKey, modelName, gitlabUrl, gitlabToken } = await request.json();
     
     // For now, we'll update the first settings record
     // In a real app, you'd associate this with a user
@@ -46,6 +50,8 @@ export async function POST(request: NextRequest) {
           openaiBaseUrl: openaiBaseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: openaiApiKey || process.env.OPENAI_API_KEY || '',
           modelName: modelName || process.env.MODEL_NAME || 'gpt-oss-120b',
+          gitlabUrl: gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4',
+          gitlabToken: gitlabToken || process.env.GITLAB_TOKEN || '',
         },
       });
     } else {
@@ -55,6 +61,8 @@ export async function POST(request: NextRequest) {
           openaiBaseUrl: openaiBaseUrl || settings.openaiBaseUrl,
           openaiApiKey: openaiApiKey || settings.openaiApiKey,
           modelName: modelName || settings.modelName,
+          gitlabUrl: gitlabUrl || settings.gitlabUrl,
+          gitlabToken: gitlabToken || settings.gitlabToken,
         },
       });
     }
@@ -63,6 +71,8 @@ export async function POST(request: NextRequest) {
       openaiBaseUrl: settings.openaiBaseUrl,
       openaiApiKey: settings.openaiApiKey,
       modelName: settings.modelName,
+      gitlabUrl: settings.gitlabUrl,
+      gitlabToken: settings.gitlabToken,
     });
   } catch (error) {
     console.error('Failed to save settings:', error);
@@ -72,4 +82,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

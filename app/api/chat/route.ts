@@ -23,9 +23,11 @@ const tools = {
     description: 'List all projects accessible to the authenticated user in the GitLab instance.',
     inputSchema: z.object({}),
     execute: async () => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const endpoint = "projects";
       const params: { order_by: string; sort: string; per_page: number; page?: number } = {
@@ -78,9 +80,11 @@ const tools = {
       visibility: z.enum(['private', 'internal', 'public']).optional().describe('Visibility level: private, internal, or public. Defaults to private.'),
     }),
     execute: async ({ name, namespaceId, description, visibility = 'private' }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const data: {
         name: string;
@@ -120,9 +124,11 @@ const tools = {
       visibility: z.enum(['private', 'internal', 'public']).optional().describe('Optional new visibility level.'),
     }),
     execute: async ({ projectId, name, description, visibility }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const data: { [key: string]: string } = {};
       if (name) data.name = name;
@@ -153,9 +159,11 @@ const tools = {
       projectId: z.number().describe('The ID of the project to delete. Must be an integer.'),
     }),
     execute: async ({ projectId }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       try {
         const response = await fetch(`${gitlabUrl}/projects/${projectId}`, {
@@ -178,9 +186,11 @@ const tools = {
       branch: z.string().default('main').describe('The branch to fetch README.md from.'),
     }),
     execute: async ({ projectId, branch }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
@@ -214,9 +224,11 @@ const tools = {
       branch: z.string().default('main').describe('The branch to create README.md on.'),
     }),
     execute: async ({ projectId, content, commitMessage, branch }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
@@ -256,9 +268,11 @@ const tools = {
       branch: z.string().default('main').describe('The branch to update README.md on.'),
     }),
     execute: async ({ projectId, content, commitMessage, branch }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
@@ -296,9 +310,11 @@ const tools = {
       branch: z.string().default('main').describe('The branch to delete README.md from.'),
     }),
     execute: async ({ projectId, commitMessage, branch }) => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
       const endpoint = `projects/${projectId}/repository/files/${encodeURIComponent(filePath)}`;
@@ -330,9 +346,11 @@ const tools = {
     description: 'List all groups accessible to the authenticated user in the GitLab instance.',
     inputSchema: z.object({}),
     execute: async () => {
-      const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com/api/v4';
-      const gitlabToken = process.env.GITLAB_TOKEN;
-      if (!gitlabToken) throw new Error("GITLAB_TOKEN environment variable is not set.");
+      // Get GitLab settings from database
+      const settings = await prisma.userSettings.findFirst();
+      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+      if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const endpoint = "groups";
       const params: { order_by: string; sort: string; per_page: number; page?: number } = {
