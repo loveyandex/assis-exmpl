@@ -10,4 +10,5 @@ docker-compose*.yml
 backend/
 prisma/dev.db
 
-
+pnpm-lock.yaml
+yarn.lock
