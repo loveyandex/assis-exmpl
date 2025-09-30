@@ -33,8 +33,8 @@ ENV HOSTNAME=0.0.0.0
 # Copy the standalone server output
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.moz/standalone ./
+COPY --from=builder /app/.moz/static ./.moz/static
 
 EXPOSE 3000
 EXPOSE 5555
