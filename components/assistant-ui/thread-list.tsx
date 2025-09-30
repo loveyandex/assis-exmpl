@@ -2,12 +2,14 @@
 
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { ArchiveIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { MoreHorizontal, PlusIcon, SearchIcon, EditIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 
 export const ThreadList: FC = () => {
   const [chats, setChats] = useState<any[]>([]);
@@ -18,6 +20,9 @@ export const ThreadList: FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [newChatTitle, setNewChatTitle] = useState('');
   const router = useRouter();
 
   // Load chat history
@@ -75,6 +80,53 @@ export const ThreadList: FC = () => {
     } catch (error) {
       console.error('Search failed:', error);
     }
+  };
+
+  const handleRenameChat = async () => {
+    if (!selectedChat || !newChatTitle.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/chats/${selectedChat.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newChatTitle.trim() }),
+      });
+      
+      if (response.ok) {
+        setChats(chats.map(chat => 
+          chat.id === selectedChat.id 
+            ? { ...chat, title: newChatTitle.trim() }
+            : chat
+        ));
+        setRenameDialogOpen(false);
+        setSelectedChat(null);
+        setNewChatTitle('');
+      }
+    } catch (error) {
+      console.error('Failed to rename chat:', error);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    if (!confirm('Are you sure you want to delete this chat?')) return;
+    
+    try {
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setChats(chats.filter(chat => chat.id !== chatId));
+      }
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
+    }
+  };
+
+  const openRenameDialog = (chat: any) => {
+    setSelectedChat(chat);
+    setNewChatTitle(chat.title || '');
+    setRenameDialogOpen(true);
   };
 
   return (
@@ -166,16 +218,36 @@ export const ThreadList: FC = () => {
                     {new Date(chat.updatedAt).toLocaleDateString()}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Implement archive functionality
-                  }}
-                >
-                  <ArchiveIcon className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      openRenameDialog(chat);
+                    }}>
+                      <EditIcon className="h-4 w-4 mr-2" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteChat(chat.id);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <TrashIcon className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
             
@@ -195,6 +267,42 @@ export const ThreadList: FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="chat-title">Chat Title</Label>
+              <Input
+                id="chat-title"
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+                placeholder="Enter new chat title"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRenameChat();
+                  }
+                }}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setRenameDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleRenameChat}>
+                Rename
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

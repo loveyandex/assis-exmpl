@@ -14,7 +14,7 @@ import {
   tool,
 } from 'ai';
 import { z } from 'zod';
-import { loadChat, saveChat, createChat } from '@/lib/db';
+import { loadChat, saveChat, createChat, prisma } from '@/lib/db';
 
 
 
@@ -382,10 +382,28 @@ export type ChatTools = InferUITools<typeof tools>;
 
 export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 
-const openai = createOpenAI({
-  baseURL: "https://api.cerebras.ai/v1",
-  apiKey: process.env.CEREBRAS_API_KEY,
-});
+// Dynamic OpenAI client creation based on user settings
+async function createOpenAIClient() {
+  try {
+    // Get user settings from database
+    const settings = await prisma.userSettings.findFirst();
+    
+    const baseURL = settings?.openaiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    const apiKey = settings?.openaiApiKey || process.env.OPENAI_API_KEY || process.env.CEREBRAS_API_KEY;
+    
+    return createOpenAI({
+      baseURL,
+      apiKey,
+    });
+  } catch (error) {
+    console.error('Failed to create OpenAI client:', error);
+    // Fallback to environment variables
+    return createOpenAI({
+      baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+      apiKey: process.env.OPENAI_API_KEY || process.env.CEREBRAS_API_KEY,
+    });
+  }
+}
 
 // GET handler for resuming streams
 export async function GET(request: Request) {
@@ -459,8 +477,15 @@ export async function POST(req: Request) {
     }
   }
 
+  // Get user settings for model selection
+  const settings = await prisma.userSettings.findFirst();
+  const modelName = settings?.modelName || process.env.MODEL_NAME || "gpt-4";
+  
+  // Create OpenAI client with user settings
+  const openai = await createOpenAIClient();
+
   const result = streamText({
-    model: openai.chat("gpt-oss-120b"),
+    model: openai.chat(modelName),
     messages: convertToModelMessages(validatedMessages),
     stopWhen: stepCountIs(5),
     tools,

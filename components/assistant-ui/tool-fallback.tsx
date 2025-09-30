@@ -14,7 +14,7 @@ export const ToolFallback: ToolCallContentPartComponent = ({
       <div className="flex items-center gap-2 px-4">
         <CheckIcon className="size-4" />
         <p className="">
-          Used tool: <b>{toolName}</b>
+          Used Data: <b>{toolName}</b>
         </p>
         <div className="flex-grow" />
         <Button onClick={() => setIsCollapsed(!isCollapsed)}>

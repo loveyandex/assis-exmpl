@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SearchModal } from "@/components/search-modal";
+import { SettingsModal } from "@/components/settings-modal";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -81,6 +82,7 @@ export const Assistant = ({
                   <Search className="h-4 w-4" />
                   <span className="sr-only">Search chats</span>
                 </Button>
+                <SettingsModal />
                 <ThemeToggle />
               </div>
             </header>

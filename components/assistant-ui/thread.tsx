@@ -92,7 +92,7 @@ const ThreadWelcome: FC = () => {
               // aui-thread-welcome-message-motion-1
               className="text-2xl font-semibold"
             >
-              I'm Nemo!
+              I&quot;m Nemo!
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -102,7 +102,7 @@ const ThreadWelcome: FC = () => {
               // aui-thread-welcome-message-motion-2
               className="text-muted-foreground/65 text-2xl"
             >
-              How can I help you today?
+              How can I help you today as Gitlab Agent?
             </motion.div>
           </div>
         </div>

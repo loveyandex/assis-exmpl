@@ -1,24 +1,29 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { listChats } from '@/lib/db';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
-  const offset = (page - 1) * limit;
-
+export async function GET(request: NextRequest) {
   try {
-    const chats = await listChats(limit, offset);
-    return Response.json({ 
-      chats: chats.chats,
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    
+    const offset = (page - 1) * limit;
+    const { chats, total } = await listChats(limit, offset);
+    
+    return NextResponse.json({
+      chats,
       pagination: {
         page,
         limit,
-        total: chats.total,
-        hasMore: offset + limit < chats.total
-      }
+        total,
+        hasMore: offset + limit < total,
+      },
     });
   } catch (error) {
-    console.error('Failed to list chats:', error);
-    return Response.json({ chats: [] }, { status: 500 });
+    console.error('Failed to fetch chats:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch chats' },
+      { status: 500 }
+    );
   }
 }
