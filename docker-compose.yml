@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  nextjs-frontend:
+    build: .
+    container_name: assis
+    ports:
+      - "5000:3000"
+    environment:
+      # OpenAI configuration
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # GitLab configuration
+      GITLAB_URL: ${GITLAB_URL}
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
+
+    # For development with hot reload, uncomment volumes:
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
