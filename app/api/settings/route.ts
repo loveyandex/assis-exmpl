@@ -13,7 +13,7 @@ export async function GET() {
         data: {
           openaiBaseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: process.env.OPENAI_API_KEY || '',
-          modelName: process.env.MODEL_NAME || 'gpt-4',
+          modelName: process.env.MODEL_NAME || 'gpt-oss-120b',
         },
       });
     }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         data: {
           openaiBaseUrl: openaiBaseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: openaiApiKey || process.env.OPENAI_API_KEY || '',
-          modelName: modelName || process.env.MODEL_NAME || 'gpt-4',
+          modelName: modelName || process.env.MODEL_NAME || 'gpt-oss-120b',
         },
       });
     } else {

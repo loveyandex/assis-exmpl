@@ -479,7 +479,7 @@ export async function POST(req: Request) {
 
   // Get user settings for model selection
   const settings = await prisma.userSettings.findFirst();
-  const modelName = settings?.modelName || process.env.MODEL_NAME || "gpt-4";
+  const modelName = settings?.modelName || process.env.MODEL_NAME || "gpt-oss-120b";
   
   // Create OpenAI client with user settings
   const openai = await createOpenAIClient();

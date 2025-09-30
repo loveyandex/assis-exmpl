@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, X } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ export function SettingsModal() {
         setSettings({
           openaiBaseUrl: data.openaiBaseUrl || process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com/v1',
           openaiApiKey: data.openaiApiKey || '',
-          modelName: data.modelName || process.env.NEXT_PUBLIC_MODEL_NAME || 'gpt-4',
+          modelName: data.modelName || process.env.NEXT_PUBLIC_MODEL_NAME || 'gpt-oss-120b',
         });
       }
     } catch (error) {
@@ -135,7 +135,7 @@ export function SettingsModal() {
                     id="model-name"
                     value={settings.modelName}
                     onChange={(e) => handleInputChange('modelName', e.target.value)}
-                    placeholder="gpt-4"
+                    placeholder="gpt-oss-120b"
                     disabled={loading}
                   />
                 </div>

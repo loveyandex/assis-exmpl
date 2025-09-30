@@ -9,6 +9,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     const messages = await loadChat(id);
     return <Assistant chatId={id} initialMessages={messages} />;
   } catch (error) {
+    console.error(error)
     notFound();
   }
 }

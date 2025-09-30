@@ -233,7 +233,7 @@ export function SearchModal({ open, onOpenChange, onChatSelect }: SearchModalPro
           )}
           {!loading && chats.length === 0 && searchQuery.trim() && (
             <div className="text-center py-8 text-muted-foreground">
-              No chats found for "{searchQuery}"
+              No chats found for &apos;{searchQuery}&apos;
             </div>
           )}
         </div>
