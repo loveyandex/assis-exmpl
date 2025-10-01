@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -46,9 +48,17 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Manage Users</h1>
-        <p className="text-sm text-muted-foreground">Admin can add users and toggle roles.</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Manage Users</h1>
+          <p className="text-sm text-muted-foreground">Admin can add users and toggle roles.</p>
+        </div>
+        <Link href="/">
+          <Button variant="outline" size="sm" className="inline-flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </Link>
       </div>
 
       {error ? <div className="text-red-500 text-sm">{error}</div> : null}

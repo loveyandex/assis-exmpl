@@ -24,9 +24,9 @@ export function verifyJwt(token: string): JwtPayload | null {
   }
 }
 
-export function getAuthTokenFromCookies(): string | null {
+export async function getAuthTokenFromCookies(): Promise<string | null> {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get(TOKEN_COOKIE)?.value;
     return token ?? null;
   } catch {
@@ -35,7 +35,7 @@ export function getAuthTokenFromCookies(): string | null {
 }
 
 export async function getCurrentUser() {
-  const token = getAuthTokenFromCookies();
+  const token = await getAuthTokenFromCookies();
   if (!token) return null;
   const payload = verifyJwt(token);
   if (!payload) return null;
