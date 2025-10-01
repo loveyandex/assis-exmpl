@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
-import { signJwt } from '@/lib/auth';
+import { signJwt, verifyJwt } from '@/lib/auth';
 
 async function hashPassword(password: string): Promise<string> {
   const salt = crypto.randomBytes(16).toString('hex');

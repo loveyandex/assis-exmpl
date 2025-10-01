@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface UserSettings {
   openaiBaseUrl: string;
@@ -28,6 +29,7 @@ export function SettingsModal() {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState<'ADMIN'|'USER'|'PENDING'|'GUEST'>('GUEST');
 
   useEffect(() => {
     if (open) {
@@ -38,6 +40,13 @@ export function SettingsModal() {
   const loadSettings = async () => {
     setLoading(true);
     try {
+      // fetch role
+      try {
+        const meRes = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ action: 'me', username: 'x', password: 'x' }) });
+        const me = await meRes.json();
+        setRole(me?.user?.role || 'GUEST');
+      } catch {}
+
       const response = await fetch('/api/settings');
       if (response.ok) {
         const data = await response.json();
@@ -51,6 +60,7 @@ export function SettingsModal() {
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
+      toast.error('Failed to load settings');
     } finally {
       setLoading(false);
     }
@@ -67,11 +77,14 @@ export function SettingsModal() {
       
       if (response.ok) {
         setOpen(false);
+        toast.success('Settings saved');
       } else {
         console.error('Failed to save settings');
+        toast.error('Failed to save settings');
       }
     } catch (error) {
       console.error('Failed to save settings:', error);
+      toast.error('Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -99,7 +112,7 @@ export function SettingsModal() {
         
         <Tabs defaultValue="configs" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="configs">API Config</TabsTrigger>
+            <TabsTrigger value="configs" disabled={role !== 'ADMIN'}>API Config</TabsTrigger>
             <TabsTrigger value="gitlab">GitLab Config</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
           </TabsList>
@@ -120,7 +133,7 @@ export function SettingsModal() {
                     value={settings.openaiBaseUrl}
                     onChange={(e) => handleInputChange('openaiBaseUrl', e.target.value)}
                     placeholder="https://api.openai.com/v1"
-                    disabled={loading}
+                    disabled={loading || role !== 'ADMIN'}
                   />
                 </div>
                 
@@ -132,7 +145,7 @@ export function SettingsModal() {
                     value={settings.openaiApiKey}
                     onChange={(e) => handleInputChange('openaiApiKey', e.target.value)}
                     placeholder="sk-..."
-                    disabled={loading}
+                    disabled={loading || role !== 'ADMIN'}
                   />
                 </div>
                 
@@ -143,7 +156,7 @@ export function SettingsModal() {
                     value={settings.modelName}
                     onChange={(e) => handleInputChange('modelName', e.target.value)}
                     placeholder="gpt-oss-120b"
-                    disabled={loading}
+                    disabled={loading || role !== 'ADMIN'}
                   />
                 </div>
               </CardContent>
@@ -166,7 +179,7 @@ export function SettingsModal() {
                     value={settings.gitlabUrl}
                     onChange={(e) => handleInputChange('gitlabUrl', e.target.value)}
                     placeholder="https://git.lab/api/v4"
-                    disabled={loading}
+                    disabled={loading || role !== 'ADMIN'}
                   />
                 </div>
                 
