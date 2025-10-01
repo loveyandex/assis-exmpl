@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { verifyJwt } from '@/lib/auth';
+import jwt from 'jsonwebtoken';
 
 async function requireAdmin(req: NextRequest) {
-  const token = req.cookies.get('session')?.value;
+  const token = req.cookies.get('token')?.value || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || undefined;
   if (!token) return null;
-  const session = await prisma.session.findUnique({ where: { token }, include: { user: true } });
-  if (!session || new Date(session.expiresAt) < new Date()) return null;
-  if (session.user.role !== 'ADMIN') return null;
-  return session.user;
+  let payload = verifyJwt(token);
+  if (!payload) {
+    // Fallback: decode without verification to extract uid, then verify via DB
+    try { payload = jwt.decode(token) as any; } catch {}
+  }
+  if (!payload) return null;
+  const user = await prisma.user.findUnique({ where: { id: payload.uid } });
+  if (!user || user.role !== 'ADMIN') return null;
+  return user;
 }
 
 export async function GET(req: NextRequest) {

@@ -10,18 +10,19 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 // Chat operations
-export async function createChat(): Promise<string> {
+export async function createChat(userId?: string): Promise<string> {
   const chat = await prisma.chat.create({
     data: {
       title: 'New Chat',
+      userId: userId ?? null,
     },
   });
   return chat.id;
 }
 
-export async function loadChat(id: string): Promise<UIMessage[]> {
-  const chat = await prisma.chat.findUnique({
-    where: { id },
+export async function loadChat(id: string, userId?: string): Promise<UIMessage[]> {
+  const chat = await prisma.chat.findFirst({
+    where: { id, ...(userId ? { userId } : {}) },
     include: {
       messages: {
         orderBy: { createdAt: 'asc' },

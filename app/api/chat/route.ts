@@ -15,6 +15,7 @@ import {
 } from 'ai';
 import { z } from 'zod';
 import { loadChat, saveChat, createChat, prisma } from '@/lib/db';
+import { verifyJwt } from '@/lib/auth';
 
 
 
@@ -433,7 +434,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const messages = await loadChat(chatId);
+    // Try to scope by user if JWT available
+    const token = (request as any).cookies?.get?.('token')?.value;
+    const payload = token ? verifyJwt(token) : null;
+    const messages = await loadChat(chatId, payload?.uid);
     return Response.json({ messages });
   } catch (error) {
     console.error('❌ API GET: Failed to load chat:', error);
@@ -445,6 +449,8 @@ export async function POST(req: Request) {
   const body = await req.json();
   const messages = (body?.messages ?? []) as ChatMessage[];
   const chatId = (body?.id ?? body?.chatId) as string | undefined;
+  const token = (req as any).cookies?.get?.('token')?.value;
+  const payload = token ? verifyJwt(token) : null;
 
   console.log('🔍 API: Received request with chatId:', chatId, 'and', messages.length, 'messages');
 
@@ -452,7 +458,7 @@ export async function POST(req: Request) {
   let currentChatId: string;
   if (!chatId) {
     try {
-      currentChatId = await createChat();
+      currentChatId = await createChat(payload?.uid);
       console.log('📝 API: Created new chat with ID:', currentChatId);
     } catch (error) {
       console.error('❌ API: Failed to create new chat:', error);

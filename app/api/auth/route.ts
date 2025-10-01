@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { signJwt } from '@/lib/auth';
 
 async function hashPassword(password: string): Promise<string> {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -25,6 +26,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
+    if (action === 'me') {
+      const token = req.cookies.get('token')?.value;
+      if (!token) return NextResponse.json({ user: null });
+      const payload = verifyJwt(token);
+      if (!payload) return NextResponse.json({ user: null });
+      const user = await prisma.user.findUnique({ where: { id: payload.uid } });
+      return NextResponse.json({ user: user ? { id: user.id, username: user.username, role: user.role } : null });
+    }
+
+    if (action === 'status') {
+      const existingAdmin = await prisma.user.findFirst({ where: { role: 'ADMIN' as any } });
+      return NextResponse.json({ hasAdmin: !!existingAdmin });
+    }
+
     if (action === 'init-admin') {
       const initPass = process.env.ADMIN_INIT_PASS;
       if (!initPass) return NextResponse.json({ error: 'ADMIN_INIT_PASS not set' }, { status: 400 });
@@ -43,23 +58,28 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'login') {
-      const user = await prisma.user.findUnique({ where: { username } });
+      let user = await prisma.user.findUnique({ where: { username } });
+      if (!user) {
+        // First-time convenience: if no admin exists and password matches ADMIN_INIT_PASS, create admin and login
+        const hasAdmin = await prisma.user.findFirst({ where: { role: 'ADMIN' as any } });
+        const initPass = process.env.ADMIN_INIT_PASS;
+        if (!hasAdmin && initPass && password === initPass) {
+          user = await prisma.user.create({ data: { username, passwordHash: await hashPassword(password), role: 'ADMIN' as any } });
+        }
+      }
       if (!user || !verifyPassword(password, user.passwordHash)) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
       }
-      const token = makeSessionToken();
+      const jwt = signJwt({ uid: user.id, role: user.role as any });
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
-      await prisma.session.create({ data: { token, userId: user.id, expiresAt } });
       const res = NextResponse.json({ id: user.id, username: user.username, role: user.role });
-      res.cookies.set('session', token, { httpOnly: true, sameSite: 'lax', path: '/', expires: expiresAt });
+      res.cookies.set('token', jwt, { httpOnly: true, sameSite: 'lax', path: '/', expires: expiresAt });
       return res;
     }
 
     if (action === 'logout') {
-      const token = req.cookies.get('session')?.value;
-      if (token) await prisma.session.deleteMany({ where: { token } });
       const res = NextResponse.json({ success: true });
-      res.cookies.set('session', '', { httpOnly: true, sameSite: 'lax', path: '/', expires: new Date(0) });
+      res.cookies.set('token', '', { httpOnly: true, sameSite: 'lax', path: '/', expires: new Date(0) });
       return res;
     }
 
