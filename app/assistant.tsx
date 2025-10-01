@@ -34,10 +34,39 @@ export const Assistant = ({
   initialMessages?: UIMessage[] 
 }) => {
   const [searchModalOpen, setSearchModalOpen] = React.useState(false);
-  
+  const [messages, setMessages] = React.useState<UIMessage[]>(initialMessages);
+
+  // Refetch messages when navigating back to this page or when chatId changes
+  React.useEffect(() => {
+    let aborted = false;
+    async function fetchMessages() {
+      if (!chatId) return;
+      try {
+        const res = await fetch(`/api/chat?chatId=${encodeURIComponent(chatId)}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!aborted && Array.isArray(data?.messages)) {
+          setMessages(data.messages as UIMessage[]);
+        }
+      } catch {}
+    }
+
+    fetchMessages();
+
+    const onPageShow = () => fetchMessages();
+    const onFocus = () => fetchMessages();
+    window.addEventListener('pageshow', onPageShow);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      aborted = true;
+      window.removeEventListener('pageshow', onPageShow);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [chatId]);
+
   const runtime = useChatRuntime({
     id: chatId,
-    messages: initialMessages,
+    messages,
   });
 
   const handleChatSelect = (chatId: string) => {
