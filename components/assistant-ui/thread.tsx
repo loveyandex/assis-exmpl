@@ -92,7 +92,7 @@ const ThreadWelcome: FC = () => {
               // aui-thread-welcome-message-motion-1
               className="text-2xl font-semibold"
             >
-              I&quot;m Nemo!
+              I&apos;m Nemo!
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -118,23 +118,23 @@ const ThreadWelcomeSuggestions: FC = () => {
       {[
         {
           title: "What are the advantages",
-          label: "of using Assistant Cloud?",
-          action: "What are the advantages of using Assistant Cloud?",
+          label: "of using Nemo Assistant?",
+          action: "What are the advantages of using Nemo Assistant?",
         },
         {
-          title: "Write code to",
-          label: `demonstrate topological sorting`,
-          action: `Write code to demonstrate topological sorting`,
+          title: "List all projects",
+          label: `we have in our Gitlab instance`,
+          action: `List all projects we have in our Gitlab instance`,
         },
         {
-          title: "Help me write an essay",
-          label: `about AI chat applications`,
-          action: `Help me write an essay about AI chat applications`,
+          title: "Create a new project",
+          label: `in our Gitlab instance`,
+          action: `Create a new project in our Gitlab instance`,
         },
         {
-          title: "What is the weather",
-          label: "in San Francisco?",
-          action: "What is the weather in San Francisco?",
+          title: "list all groups",
+          label: "in our Gitlab?",
+          action: "List all groups in our Gitlab instance?",
         },
       ].map((suggestedAction, index) => (
         <motion.div
