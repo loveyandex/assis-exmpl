@@ -46,7 +46,7 @@ model UserSettings {
   gitlabUrl     String?  @default("https://git.lab/api/v4")
   gitlabToken   String?
   // Optional linkage to a user for per-user settings
-  userId        String?
+  userId        String?  @unique
   user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -64,6 +64,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   chats         Chat[]
   settings      UserSettings?
+  sessions      Session[]
   
   @@map("users")
 }
@@ -72,4 +73,15 @@ enum UserRole {
   ADMIN
   USER
   PENDING
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@map("sessions")
 }

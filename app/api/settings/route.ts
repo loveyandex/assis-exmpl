@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+async function getSessionUser(req: NextRequest) {
+  const token = req.cookies.get('session')?.value;
+  if (!token) return null;
+  const session = await prisma.session.findUnique({ where: { token }, include: { user: true } });
+  if (!session || new Date(session.expiresAt) < new Date()) return null;
+  return session.user;
+}
+
+export async function GET(req: NextRequest) {
   try {
-    // For now, we'll use a single settings record
-    // In a real app, you'd associate this with a user
-    let settings = await prisma.userSettings.findFirst();
+    const user = await getSessionUser(req);
+    let settings = user
+      ? await prisma.userSettings.findFirst({ where: { userId: user.id } })
+      : await prisma.userSettings.findFirst();
     
     if (!settings) {
       // Create default settings if none exist
@@ -16,6 +25,7 @@ export async function GET() {
           modelName: process.env.MODEL_NAME || 'gpt-oss-120b',
           gitlabUrl: process.env.GITLAB_URL || 'https://git.lab/api/v4',
           gitlabToken: process.env.GITLAB_TOKEN || '',
+          userId: user ? user.id : null,
         },
       });
     }
@@ -39,10 +49,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { openaiBaseUrl, openaiApiKey, modelName, gitlabUrl, gitlabToken } = await request.json();
-    
-    // For now, we'll update the first settings record
-    // In a real app, you'd associate this with a user
-    let settings = await prisma.userSettings.findFirst();
+    const user = await getSessionUser(request);
+    let settings = user
+      ? await prisma.userSettings.findFirst({ where: { userId: user.id } })
+      : await prisma.userSettings.findFirst();
     
     if (!settings) {
       settings = await prisma.userSettings.create({
@@ -52,6 +62,7 @@ export async function POST(request: NextRequest) {
           modelName: modelName || process.env.MODEL_NAME || 'gpt-oss-120b',
           gitlabUrl: gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4',
           gitlabToken: gitlabToken || process.env.GITLAB_TOKEN || '',
+          userId: user ? user.id : null,
         },
       });
     } else {
