@@ -24,8 +24,16 @@ const tools = {
     description: 'List all projects accessible to the authenticated user in the GitLab instance.',
     inputSchema: z.object({}),
     execute: async () => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      // Get per-user GitLab settings
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -81,8 +89,15 @@ const tools = {
       visibility: z.enum(['private', 'internal', 'public']).optional().describe('Visibility level: private, internal, or public. Defaults to private.'),
     }),
     execute: async ({ name, namespaceId, description, visibility = 'private' }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -125,8 +140,15 @@ const tools = {
       visibility: z.enum(['private', 'internal', 'public']).optional().describe('Optional new visibility level.'),
     }),
     execute: async ({ projectId, name, description, visibility }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -160,8 +182,15 @@ const tools = {
       projectId: z.number().describe('The ID of the project to delete. Must be an integer.'),
     }),
     execute: async ({ projectId }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -187,8 +216,15 @@ const tools = {
       branch: z.string().default('main').describe('The branch to fetch README.md from.'),
     }),
     execute: async ({ projectId, branch }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -225,8 +261,15 @@ const tools = {
       branch: z.string().default('main').describe('The branch to create README.md on.'),
     }),
     execute: async ({ projectId, content, commitMessage, branch }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -269,8 +312,15 @@ const tools = {
       branch: z.string().default('main').describe('The branch to update README.md on.'),
     }),
     execute: async ({ projectId, content, commitMessage, branch }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -311,8 +361,15 @@ const tools = {
       branch: z.string().default('main').describe('The branch to delete README.md from.'),
     }),
     execute: async ({ projectId, commitMessage, branch }) => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -347,8 +404,15 @@ const tools = {
     description: 'List all groups accessible to the authenticated user in the GitLab instance.',
     inputSchema: z.object({}),
     execute: async () => {
-      // Get GitLab settings from database
-      const settings = await prisma.userSettings.findFirst();
+      const token = (globalThis as any).currentRequestToken as string | undefined;
+      let userId: string | undefined;
+      if (token) {
+        const payload = verifyJwt(token);
+        userId = payload?.uid;
+      }
+      const settings = userId
+        ? await prisma.userSettings.findFirst({ where: { userId } })
+        : await prisma.userSettings.findFirst();
       const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
       const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
@@ -451,6 +515,9 @@ export async function POST(req: Request) {
   const chatId = (body?.id ?? body?.chatId) as string | undefined;
   const token = (req as any).cookies?.get?.('token')?.value;
   const payload = token ? verifyJwt(token) : null;
+
+  // Expose token to tool executors for per-user settings lookup
+  (globalThis as any).currentRequestToken = token;
 
   console.log('🔍 API: Received request with chatId:', chatId, 'and', messages.length, 'messages');
 

@@ -15,6 +15,8 @@ export default function AdminUsersPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editForm, setEditForm] = useState({ username: '', password: '', gitlabToken: '' });
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ username: '', password: '', gitlabToken: '' });
 
   async function load() {
     setError('');
@@ -97,29 +99,9 @@ export default function AdminUsersPage() {
       {error ? <div className="text-red-500 text-sm">{error}</div> : null}
 
       <Card className="p-4">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input placeholder="New username" id="new-username" />
-            <Input type="password" placeholder="Temp password" id="new-password" />
-          </div>
-          <Button
-            onClick={async () => {
-              const username = (document.getElementById('new-username') as HTMLInputElement)?.value?.trim();
-              const password = (document.getElementById('new-password') as HTMLInputElement)?.value;
-              if (!username || !password) return;
-              const res = await fetch('/api/users', { method: 'POST', headers: { 'Content-Type':'application/json' }, credentials: 'include', body: JSON.stringify({ username, password, role: 'USER' }) });
-              if (!res.ok) {
-                const j = await res.json().catch(() => ({}));
-                setError(j?.error || 'Failed to create user');
-                toast.error(j?.error || 'Failed to create user');
-                return;
-              }
-              toast.success('User created');
-              (document.getElementById('new-username') as HTMLInputElement).value = '';
-              (document.getElementById('new-password') as HTMLInputElement).value = '';
-              load();
-            }}
-          >Add user</Button>
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">Create new users</div>
+          <Button onClick={() => setCreateOpen(true)}>Add user</Button>
         </div>
       </Card>
 
@@ -197,6 +179,69 @@ export default function AdminUsersPage() {
               <Button onClick={saveUserEdit}>
                 Save Changes
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="create-username">Username</Label>
+              <Input
+                id="create-username"
+                value={createForm.username}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="jane.doe"
+              />
+            </div>
+            <div>
+              <Label htmlFor="create-password">Password</Label>
+              <Input
+                id="create-password"
+                type="password"
+                value={createForm.password}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="temporary password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="create-gitlab-token">GitLab Token (optional)</Label>
+              <Input
+                id="create-gitlab-token"
+                type="password"
+                value={createForm.gitlabToken}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, gitlabToken: e.target.value }))}
+                placeholder="glpat-..."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                if (!createForm.username || !createForm.password) {
+                  toast.error('Username and password are required');
+                  return;
+                }
+                const res = await fetch('/api/users', {
+                  method: 'POST',
+                  headers: { 'Content-Type':'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ username: createForm.username, password: createForm.password, role: 'USER', gitlabToken: createForm.gitlabToken || undefined })
+                });
+                if (!res.ok) {
+                  const j = await res.json().catch(() => ({}));
+                  toast.error(j?.error || 'Failed to create user');
+                  return;
+                }
+                toast.success('User created');
+                setCreateOpen(false);
+                setCreateForm({ username: '', password: '', gitlabToken: '' });
+                load();
+              }}>Create</Button>
             </div>
           </div>
         </DialogContent>

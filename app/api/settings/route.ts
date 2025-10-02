@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { verifyJwt } from '@/lib/auth';
 
 async function getSessionUser(req: NextRequest) {
-  const token = req.cookies.get('session')?.value;
+  const token = req.cookies.get('token')?.value;
   if (!token) return null;
-  const session = await prisma.session.findUnique({ where: { token }, include: { user: true } });
-  if (!session || new Date(session.expiresAt) < new Date()) return null;
-  return session.user;
+  const payload = verifyJwt(token);
+  if (!payload) return null;
+  const user = await prisma.user.findUnique({ where: { id: payload.uid } });
+  return user;
 }
 
 export async function GET(req: NextRequest) {
