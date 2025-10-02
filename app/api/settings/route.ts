@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       // Create default settings if none exist
       settings = await prisma.userSettings.create({
         data: {
-          gitlabToken: '',
+          gitlabToken: user.role === 'ADMIN' ? process.env.GITLAB_TOKEN || '' : '',
           userId: user.id,
         },
       });
