@@ -31,11 +31,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const endpoint = "projects";
@@ -95,11 +99,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const data: {
@@ -146,11 +154,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const data: { [key: string]: string } = {};
@@ -188,11 +200,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       try {
@@ -222,11 +238,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
@@ -267,11 +287,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
@@ -318,11 +342,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
@@ -367,11 +395,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const filePath = "README.md";
@@ -410,11 +442,15 @@ const tools = {
         const payload = verifyJwt(token);
         userId = payload?.uid;
       }
-      const settings = userId
+      // Get system settings for GitLab URL
+      const sysSettings = await prisma.systemSettings.findFirst();
+      const gitlabUrl = sysSettings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
+      
+      // Get user settings for GitLab token
+      const userSettings = userId
         ? await prisma.userSettings.findFirst({ where: { userId } })
-        : await prisma.userSettings.findFirst();
-      const gitlabUrl = settings?.gitlabUrl || process.env.GITLAB_URL || 'https://git.lab/api/v4';
-      const gitlabToken = settings?.gitlabToken || process.env.GITLAB_TOKEN;
+        : null;
+      const gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
       if (!gitlabToken) throw new Error("GitLab token is not configured. Please set it in settings.");
 
       const endpoint = "groups";
@@ -465,14 +501,14 @@ export type ChatTools = InferUITools<typeof tools>;
 
 export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 
-// Dynamic OpenAI client creation based on user settings
+// Dynamic OpenAI client creation based on system settings
 async function createOpenAIClient() {
   try {
-    // Get user settings from database
-    const settings = await prisma.userSettings.findFirst();
+    // Get system settings from database
+    const sysSettings = await prisma.systemSettings.findFirst();
     
-    const baseURL = settings?.openaiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
-    const apiKey = settings?.openaiApiKey || process.env.OPENAI_API_KEY || process.env.CEREBRAS_API_KEY;
+    const baseURL = sysSettings?.openaiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    const apiKey = sysSettings?.openaiApiKey || process.env.OPENAI_API_KEY || process.env.CEREBRAS_API_KEY;
     
     return createOpenAI({
       baseURL,
@@ -568,11 +604,9 @@ export async function POST(req: Request) {
     }
   }
 
-  // Get user settings (per-user) for model selection
-  const settings = payload?.uid
-    ? await prisma.userSettings.findFirst({ where: { userId: payload.uid } })
-    : await prisma.userSettings.findFirst();
-  const modelName = settings?.modelName || process.env.MODEL_NAME || "gpt-oss-120b";
+  // Get model name from system settings
+  const sysSettings = await prisma.systemSettings.findFirst();
+  const modelName = sysSettings?.modelName || process.env.MODEL_NAME || "gpt-oss-120b";
   
   // Create OpenAI client with user settings
   const openai = await createOpenAIClient();

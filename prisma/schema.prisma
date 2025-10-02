@@ -40,10 +40,7 @@ model Message {
 
 model UserSettings {
   id            String   @id @default(cuid())
-  openaiBaseUrl String?  @default("https://api.openai.com/v1")
-  openaiApiKey  String?
-  modelName     String?  @default("gpt-oss-120b")
-  gitlabUrl     String?  @default("https://git.lab/api/v4")
+  // Only user-specific settings remain here
   gitlabToken   String?
   // Optional linkage to a user for per-user settings
   userId        String?  @unique
@@ -84,4 +81,29 @@ model Session {
   expiresAt  DateTime
 
   @@map("sessions")
+}
+
+model SystemSettings {
+  id                 String   @id @default(cuid())
+  // OpenAI configuration (system-wide)
+  openaiBaseUrl      String?  @default("https://api.openai.com/v1")
+  openaiApiKey       String?
+  modelName          String?  @default("gpt-oss-120b")
+  // GitLab configuration (system-wide)
+  gitlabUrl          String?  @default("https://git.lab/api/v4")
+  // LDAP configuration (system-wide)
+  ldapHost           String?
+  ldapPort           Int?     @default(389)
+  ldapUidAttr        String?  @default("sAMAccountName")
+  ldapBindDn         String?
+  ldapBindPassword   String?
+  ldapEncryption     String?  @default("plain")
+  ldapActiveDirectory Boolean? @default(true)
+  ldapBaseDn         String?
+  allowUsernameOrEmailLogin Boolean? @default(true)
+  blockAutoCreatedUsers Boolean? @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("system_settings")
 }

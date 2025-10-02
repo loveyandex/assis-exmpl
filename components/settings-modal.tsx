@@ -11,25 +11,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 
 interface UserSettings {
+  gitlabToken: string;
+}
+
+interface SystemSettings {
   openaiBaseUrl: string;
   openaiApiKey: string;
   modelName: string;
   gitlabUrl: string;
-  gitlabToken: string;
 }
 
 export function SettingsModal() {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState<UserSettings>({
+    gitlabToken: '',
+  });
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>({
     openaiBaseUrl: '',
     openaiApiKey: '',
     modelName: '',
     gitlabUrl: '',
-    gitlabToken: '',
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<'ADMIN'|'USER'|'PENDING'|'GUEST'>('GUEST');
+  // LDAP minimal config state (admin-only)
+  const [ldap, setLdap] = useState({
+    host: '',
+    port: 389,
+    bindDn: '',
+    bindPassword: '',
+    base: '',
+    uid: 'sAMAccountName',
+    encryption: 'plain',
+  });
 
   useEffect(() => {
     if (open) {
@@ -47,17 +62,44 @@ export function SettingsModal() {
         setRole(me?.user?.role || 'GUEST');
       } catch {}
 
+      // Load user settings (only GitLab token)
       const response = await fetch('/api/settings');
       if (response.ok) {
         const data = await response.json();
         setSettings({
-          openaiBaseUrl: data.openaiBaseUrl || process.env.NEXT_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com/v1',
-          openaiApiKey: data.openaiApiKey || '',
-          modelName: data.modelName || process.env.NEXT_PUBLIC_MODEL_NAME || 'gpt-oss-120b',
-          gitlabUrl: data.gitlabUrl || process.env.NEXT_PUBLIC_GITLAB_URL || 'https://git.lab/api/v4',
           gitlabToken: data.gitlabToken || '',
         });
       }
+
+      // Load system settings (global config)
+      const sysResponse = await fetch('/api/system-settings');
+      if (sysResponse.ok) {
+        const sysData = await sysResponse.json();
+        setSystemSettings({
+          openaiBaseUrl: sysData.openaiBaseUrl || 'https://api.openai.com/v1',
+          openaiApiKey: sysData.openaiApiKey || '',
+          modelName: sysData.modelName || 'gpt-oss-120b',
+          gitlabUrl: sysData.gitlabUrl || 'https://git.lab/api/v4',
+        });
+      }
+
+      // Load system LDAP settings
+      try {
+        const sysRes = await fetch('/api/system-settings');
+        if (sysRes.ok) {
+          const s = await sysRes.json();
+          const L = s?.ldap || {};
+          setLdap({
+            host: L.host || '',
+            port: Number(L.port ?? 389),
+            bindDn: L.bindDn || '',
+            bindPassword: '',
+            base: L.baseDn || L.base || '',
+            uid: L.uidAttr || 'sAMAccountName',
+            encryption: L.encryption || 'plain',
+          });
+        }
+      } catch {}
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error('Failed to load settings');
@@ -69,19 +111,48 @@ export function SettingsModal() {
   const saveSettings = async () => {
     setSaving(true);
     try {
+      // Save user settings (GitLab token)
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
       
-      if (response.ok) {
-        setOpen(false);
-        toast.success('Settings saved');
-      } else {
-        console.error('Failed to save settings');
-        toast.error('Failed to save settings');
+      if (!response.ok) {
+        console.error('Failed to save user settings');
+        toast.error('Failed to save user settings');
+        return;
       }
+
+      // Save system settings (admin only)
+      if (role === 'ADMIN') {
+        const sysRes = await fetch('/api/system-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            openaiBaseUrl: systemSettings.openaiBaseUrl,
+            openaiApiKey: systemSettings.openaiApiKey,
+            modelName: systemSettings.modelName,
+            gitlabUrl: systemSettings.gitlabUrl,
+            ldap: {
+              host: ldap.host,
+              port: Number(ldap.port) || 389,
+              bindDn: ldap.bindDn,
+              bindPassword: ldap.bindPassword || undefined,
+              baseDn: ldap.base,
+              uidAttr: ldap.uid,
+              encryption: ldap.encryption,
+            }
+          }),
+        });
+        if (!sysRes.ok) {
+          toast.error('Failed to save system settings');
+          return;
+        }
+      }
+
+      setOpen(false);
+      toast.success('Settings saved');
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast.error('Failed to save settings');
@@ -92,6 +163,10 @@ export function SettingsModal() {
 
   const handleInputChange = (field: keyof UserSettings, value: string) => {
     setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSystemInputChange = (field: keyof SystemSettings, value: string) => {
+    setSystemSettings(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -111,9 +186,10 @@ export function SettingsModal() {
         </DialogHeader>
         
         <Tabs defaultValue="configs" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="configs" disabled={role !== 'ADMIN'}>API Config</TabsTrigger>
             <TabsTrigger value="gitlab">GitLab Config</TabsTrigger>
+            <TabsTrigger value="ldap" disabled={role !== 'ADMIN'}>LDAP</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
           </TabsList>
           
@@ -130,8 +206,8 @@ export function SettingsModal() {
                   <Label htmlFor="openai-base-url">OpenAI Base URL</Label>
                   <Input
                     id="openai-base-url"
-                    value={settings.openaiBaseUrl}
-                    onChange={(e) => handleInputChange('openaiBaseUrl', e.target.value)}
+                    value={systemSettings.openaiBaseUrl}
+                    onChange={(e) => handleSystemInputChange('openaiBaseUrl', e.target.value)}
                     placeholder="https://api.openai.com/v1"
                     disabled={loading || role !== 'ADMIN'}
                   />
@@ -142,8 +218,8 @@ export function SettingsModal() {
                   <Input
                     id="openai-api-key"
                     type="password"
-                    value={settings.openaiApiKey}
-                    onChange={(e) => handleInputChange('openaiApiKey', e.target.value)}
+                    value={systemSettings.openaiApiKey}
+                    onChange={(e) => handleSystemInputChange('openaiApiKey', e.target.value)}
                     placeholder="sk-..."
                     disabled={loading || role !== 'ADMIN'}
                   />
@@ -153,11 +229,52 @@ export function SettingsModal() {
                   <Label htmlFor="model-name">Model Name</Label>
                   <Input
                     id="model-name"
-                    value={settings.modelName}
-                    onChange={(e) => handleInputChange('modelName', e.target.value)}
+                    value={systemSettings.modelName}
+                    onChange={(e) => handleSystemInputChange('modelName', e.target.value)}
                     placeholder="gpt-oss-120b"
                     disabled={loading || role !== 'ADMIN'}
                   />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ldap" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>LDAP Configuration</CardTitle>
+                <CardDescription>System-wide LDAP settings for corporate sign-in.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="ldap-host">Host</Label>
+                    <Input id="ldap-host" placeholder="ldap.example.com" disabled={role !== 'ADMIN'} value={ldap.host} onChange={(e)=>setLdap(prev=>({...prev, host: e.target.value}))} />
+                  </div>
+                  <div>
+                    <Label htmlFor="ldap-port">Port</Label>
+                    <Input id="ldap-port" placeholder="389" disabled={role !== 'ADMIN'} value={ldap.port} onChange={(e)=>setLdap(prev=>({...prev, port: Number(e.target.value||'0')}))} />
+                  </div>
+                  <div>
+                    <Label htmlFor="ldap-uid">UID Attribute</Label>
+                    <Input id="ldap-uid" placeholder="sAMAccountName" disabled={role !== 'ADMIN'} value={ldap.uid} onChange={(e)=>setLdap(prev=>({...prev, uid: e.target.value}))} />
+                  </div>
+                  <div>
+                    <Label htmlFor="ldap-encryption">Encryption</Label>
+                    <Input id="ldap-encryption" placeholder="plain" disabled={role !== 'ADMIN'} value={ldap.encryption} onChange={(e)=>setLdap(prev=>({...prev, encryption: e.target.value}))} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ldap-binddn">Bind DN</Label>
+                  <Input id="ldap-binddn" placeholder="CN=Bind,OU=Users,DC=example,DC=com" disabled={role !== 'ADMIN'} value={ldap.bindDn} onChange={(e)=>setLdap(prev=>({...prev, bindDn: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ldap-bindpass">Bind Password</Label>
+                  <Input id="ldap-bindpass" type="password" placeholder="••••••••" disabled={role !== 'ADMIN'} value={ldap.bindPassword} onChange={(e)=>setLdap(prev=>({...prev, bindPassword: e.target.value}))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ldap-base">Base DN</Label>
+                  <Input id="ldap-base" placeholder="OU=Users,DC=example,DC=com" disabled={role !== 'ADMIN'} value={ldap.base} onChange={(e)=>setLdap(prev=>({...prev, base: e.target.value}))} />
                 </div>
               </CardContent>
             </Card>
@@ -176,8 +293,8 @@ export function SettingsModal() {
                   <Label htmlFor="gitlab-url">GitLab URL</Label>
                   <Input
                     id="gitlab-url"
-                    value={settings.gitlabUrl}
-                    onChange={(e) => handleInputChange('gitlabUrl', e.target.value)}
+                    value={systemSettings.gitlabUrl}
+                    onChange={(e) => handleSystemInputChange('gitlabUrl', e.target.value)}
                     placeholder="https://git.lab/api/v4"
                     disabled={loading || role !== 'ADMIN'}
                   />

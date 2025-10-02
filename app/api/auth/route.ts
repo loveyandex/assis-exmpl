@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { signJwt, verifyJwt } from '@/lib/auth';
+import { authenticateLdap } from '@/lib/ldap';
 
 async function hashPassword(password: string): Promise<string> {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -73,6 +74,23 @@ export async function POST(req: NextRequest) {
       const jwt = signJwt({ uid: user.id, role: user.role as any });
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
       const res = NextResponse.json({ id: user.id, username: user.username, role: user.role });
+      res.cookies.set('token', jwt, { httpOnly: true, sameSite: 'lax', path: '/', expires: expiresAt });
+      return res;
+    }
+
+    if (action === 'ldap-login') {
+      // username is userlogon for LDAP
+      const result = await authenticateLdap(username, password);
+      if (!result.ok) return NextResponse.json({ error: result.error || 'LDAP auth failed' }, { status: 401 });
+      // ensure local user exists; create if missing with empty password
+      let user = await prisma.user.findUnique({ where: { username } });
+      if (!user) {
+        user = await prisma.user.create({ data: { username, passwordHash: '', role: 'USER' as any } });
+        await prisma.userSettings.create({ data: { userId: user.id, gitlabToken: '' } });
+      }
+      const jwt = signJwt({ uid: user.id, role: user.role as any });
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+      const res = NextResponse.json({ id: user.id, username: user.username, role: user.role, method: 'ldap' });
       res.cookies.set('token', jwt, { httpOnly: true, sameSite: 'lax', path: '/', expires: expiresAt });
       return res;
     }
