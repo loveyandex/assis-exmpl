@@ -45,9 +45,7 @@ export async function POST(req: NextRequest) {
   const hash = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256').toString('hex');
   const passwordHash = `${salt}:${hash}`;
   const user = await prisma.user.create({ data: { username, passwordHash, role: (role || 'PENDING') as any } });
-  if (gitlabToken) {
-    await prisma.userSettings.create({ data: { userId: user.id, gitlabToken } });
-  }
+  await prisma.userSettings.create({ data: { userId: user.id, gitlabToken: gitlabToken || '' } });
   return NextResponse.json({ id: user.id, username: user.username, role: user.role });
 }
 

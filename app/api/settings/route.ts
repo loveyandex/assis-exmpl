@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyJwt } from '@/lib/auth';
+import { getGitlabUrlFromCache, setGitlabUrlInCache } from '@/lib/settings-cache';
 
 async function getSessionUser(req: NextRequest) {
   const token = req.cookies.get('token')?.value;
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
       openaiBaseUrl: settings.openaiBaseUrl,
       openaiApiKey: settings.openaiApiKey,
       modelName: settings.modelName,
-      gitlabUrl: settings.gitlabUrl,
+      gitlabUrl: settings.gitlabUrl || getGitlabUrlFromCache() || process.env.GITLAB_URL || 'https://git.lab/api/v4',
       gitlabToken: settings.gitlabToken,
     });
   } catch (error) {
@@ -78,6 +79,12 @@ export async function POST(request: NextRequest) {
           gitlabToken: gitlabToken || settings.gitlabToken,
         },
       });
+    }
+
+    // If an admin updates GitLab URL, apply to all users and cache it in-memory for quick reads
+    if (user && user.role === 'ADMIN' && gitlabUrl) {
+      await prisma.userSettings.updateMany({ data: { gitlabUrl } });
+      setGitlabUrlInCache(gitlabUrl);
     }
 
     return NextResponse.json({
