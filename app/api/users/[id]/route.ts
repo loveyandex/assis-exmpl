@@ -19,10 +19,30 @@ async function requireAdmin(req: NextRequest) {
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const { role } = await req.json();
+  const { role, username, password, gitlabToken } = await req.json();
   const { id } = await params;
-  if (!role) return NextResponse.json({ error: 'role required' }, { status: 400 });
-  const user = await prisma.user.update({ where: { id }, data: { role } as any });
+  
+  const updateData: any = {};
+  if (role) updateData.role = role;
+  if (username) updateData.username = username;
+  if (password) {
+    const crypto = await import('crypto');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256').toString('hex');
+    updateData.passwordHash = `${salt}:${hash}`;
+  }
+  
+  const user = await prisma.user.update({ where: { id }, data: updateData });
+  
+  // Update GitLab token in user settings
+  if (gitlabToken !== undefined) {
+    await prisma.userSettings.upsert({
+      where: { userId: id },
+      update: { gitlabToken },
+      create: { userId: id, gitlabToken },
+    });
+  }
+  
   return NextResponse.json({ id: user.id, username: user.username, role: user.role });
 }
 

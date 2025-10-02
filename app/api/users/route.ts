@@ -20,8 +20,17 @@ async function requireAdmin(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
-  return NextResponse.json(users.map(u => ({ id: u.id, username: u.username, role: u.role, createdAt: u.createdAt })));
+  const users = await prisma.user.findMany({ 
+    orderBy: { createdAt: 'desc' },
+    include: { settings: true }
+  });
+  return NextResponse.json(users.map(u => ({ 
+    id: u.id, 
+    username: u.username, 
+    role: u.role, 
+    createdAt: u.createdAt,
+    gitlabToken: u.settings?.gitlabToken || ''
+  })));
 }
 
 export async function POST(req: NextRequest) {
