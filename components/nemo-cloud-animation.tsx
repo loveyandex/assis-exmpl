@@ -6,25 +6,26 @@ import { Cloud, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
 function FloatingCloud({ position, speed = 1 }: { position: [number, number, number], speed?: number }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
   
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.position.x = position[0] + Math.sin(state.clock.elapsedTime * speed) * 0.5;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * speed * 0.7) * 0.3;
-      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * speed * 0.5) * 0.1;
+    if (groupRef.current) {
+      groupRef.current.position.x = position[0] + Math.sin(state.clock.elapsedTime * speed) * 0.5;
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * speed * 0.7) * 0.3;
+      groupRef.current.rotation.z = Math.sin(state.clock.elapsedTime * speed * 0.5) * 0.1;
     }
   });
 
   return (
-    <Cloud
-      ref={meshRef}
-      position={position}
-      speed={0.4}
-      opacity={0.6}
-      color="#ffffff"
-      segments={20}
-    />
+    <group ref={groupRef}>
+      <Cloud
+        position={[0, 0, 0]}
+        speed={0.4}
+        opacity={0.6}
+        color="#ffffff"
+        segments={20}
+      />
+    </group>
   );
 }
 

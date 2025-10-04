@@ -1,7 +1,7 @@
 services:
   nemo-ai:
-    image: docker.io/nemo/nemo:latest
-    container_name: assis
+    image: nemo/nemo:v2
+    container_name: assisv2
     ports:
       - "5000:3000"
       - "5555:5555"
