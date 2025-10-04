@@ -1,11 +1,10 @@
-version: "3.9"
-
 services:
-  nextjs-frontend:
-    build: .
+  nemo-ai:
+    image: docker.io/nemo/nemo:latest
     container_name: assis
     ports:
       - "5000:3000"
+      - "5555:5555"
     environment:
       # OpenAI configuration
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
@@ -15,6 +14,12 @@ services:
       GITLAB_URL: ${GITLAB_URL}
       GITLAB_TOKEN: ${GITLAB_TOKEN}
 
+      # Admin configuration
+      ADMIN_INIT_PASS: ${ADMIN_INIT_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Database configuration  
+      DATABASE_URL: ${DATABASE_URL}
     # For development with hot reload, uncomment volumes:
     # volumes:
     #   - .:/app

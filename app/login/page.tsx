@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import LoginLayout from '@/components/login-layout';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,48 +57,42 @@ function LoginInner() {
   };
 
   return (
-    <div className="relative min-h-dvh overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-40" aria-hidden>
-        <svg className="absolute -left-10 top-0 h-[120%] w-[120%] text-purple-500/20" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="g" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-          </defs>
-          <circle cx="200" cy="150" r="200" fill="url(#g)" />
-          <circle cx="650" cy="450" r="250" fill="url(#g)" />
-        </svg>
-      </div>
-
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center p-6">
-        <div className="w-full rounded-2xl border bg-background/60 p-6 shadow-lg backdrop-blur">
-          <div className="mb-4 text-center">
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-600 text-white">
-              N
-            </div>
-            <h1 className="text-xl font-semibold">Sign in to Nemo</h1>
-            <p className="text-muted-foreground text-sm">Nemo is AI Watch to projects of Xorg</p>
-          </div>
-
-          <form onSubmit={submit} className="space-y-4">
-            {error ? <div className="text-red-500 text-sm">{error}</div> : null}
-            <div>
-              <label className="block text-sm font-medium mb-1">Username</label>
-              <input className="w-full border rounded px-3 py-2" placeholder="admin" value={username} onChange={(e)=>setUsername(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
-              <input className="w-full border rounded px-3 py-2" type="password" placeholder={hasAdmin===false?"ADMIN_INIT_PASS":"Your password"} value={password} onChange={(e)=>setPassword(e.target.value)} />
-            </div>
-            <button className="w-full rounded bg-purple-600 text-white py-2 hover:bg-purple-700 transition">{hasAdmin===false?"Initialize Admin & Sign in":"Sign in"}</button>
-          </form>
-          <div className="mt-4 text-center text-xs text-muted-foreground">
-            By continuing you agree to the Terms and Privacy Policy.
-          </div>
+    <LoginLayout 
+      title="Sign in to Nemo" 
+      subtitle="Nemo is AI Watch to projects of Xorg"
+    >
+      <form onSubmit={submit} className="space-y-6">
+        {error ? <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">{error}</div> : null}
+        <div>
+          <label className="block text-sm font-medium mb-2">Username</label>
+          <input 
+            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+            placeholder="admin" 
+            value={username} 
+            onChange={(e)=>setUsername(e.target.value)} 
+          />
         </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Password</label>
+          <input 
+            className="w-full border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" 
+            type="password" 
+            placeholder={hasAdmin===false?"ADMIN_INIT_PASS":"Your password"} 
+            value={password} 
+            onChange={(e)=>setPassword(e.target.value)} 
+          />
+        </div>
+        <button className="w-full rounded-md bg-primary text-primary-foreground py-2 hover:bg-primary/90 transition-colors font-medium">
+          {hasAdmin===false?"Initialize Admin & Sign in":"Sign in"}
+        </button>
+      </form>
+      <div className="mt-6 text-center text-xs text-muted-foreground">
+        By continuing you agree to the Terms and Privacy Policy.
       </div>
-    </div>
+      <div className="mt-2 text-center text-xs text-muted-foreground">
+        <a className="text-primary hover:text-primary/80 transition-colors" href="/login/ldap">Sign in with LDAP</a>
+      </div>
+    </LoginLayout>
   );
 }
 
