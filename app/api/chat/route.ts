@@ -382,26 +382,6 @@ const tools = {
       }
     },
   }),
-  generateGitLabToken: tool({
-    description: 'Generate a new GitLab impersonation token for the current user (admin only).',
-    inputSchema: z.object({}),
-    execute: async () => {
-      const { userId, username } = await getCurrentUserInfo();
-      
-      // Check if current user is admin
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user || user.role !== 'ADMIN') {
-        throw new Error("Only administrators can manually generate GitLab tokens.");
-      }
-
-      try {
-        const token = await autoGenerateGitLabToken(userId, username);
-        return `Successfully generated new GitLab token for user ${username}. The token has been saved and will expire in 300 days.`;
-      } catch (error) {
-        return `Failed to generate GitLab token: ${error instanceof Error ? error.message : String(error)}`;
-      }
-    },
-  }),
 } satisfies ToolSet;
 
 export type ChatTools = InferUITools<typeof tools>;
@@ -535,7 +515,6 @@ Available capabilities:
 - updateReadme: Update existing README.md files
 - deleteReadme: Delete README.md files
 - listAllGroups: List all accessible GitLab groups
-- generateGitLabToken: Generate new GitLab impersonation tokens (admin only)
 
 Important: If GitLab tokens are not configured, the system will automatically attempt to generate them using admin privileges. Ask for required parameters (name, namespaceId) when needed and confirm before creating or deleting resources.`,
   });
