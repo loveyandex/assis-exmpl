@@ -59,7 +59,7 @@ function LoginInner() {
   return (
     <LoginLayout 
       title="Sign in to Nemo" 
-      subtitle="Nemo is AI Watch to projects of Xorg"
+      subtitle="Nemo is AI Chat to projects of organization"
     >
       <form onSubmit={submit} className="space-y-6">
         {error ? <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">{error}</div> : null}
