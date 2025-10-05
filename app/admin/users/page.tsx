@@ -93,6 +93,26 @@ export default function AdminUsersPage() {
     return 'border-amber-500 text-amber-600';
   }
 
+  function formatTimeAgo(input: string | number | Date): string {
+    const now = Date.now();
+    const ts = new Date(input).getTime();
+    const diffMs = Math.max(0, now - ts);
+    const sec = Math.floor(diffMs / 1000);
+    if (sec < 60) return `${sec}s ago`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}d ago`;
+    const wk = Math.floor(day / 7);
+    if (wk < 4) return `${wk}w ago`;
+    const mon = Math.floor(day / 30);
+    if (mon < 12) return `${mon}M ago`;
+    const yr = Math.floor(day / 365);
+    return `${yr}y ago`;
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between gap-3">
@@ -120,8 +140,8 @@ export default function AdminUsersPage() {
             className="max-w-xs"
           />
           <Button variant="outline" onClick={()=>{ setPage(1); load(1, pageSize, query); }}>Search</Button>
-          <div className="ml-auto text-sm text-muted-foreground">Create new users</div>
-          <Button onClick={() => setCreateOpen(true)}>Add user</Button>
+          {/* <div className="ml-auto text-sm text-muted-foreground">Create new users</div> */}
+          <Button onClick={() => setCreateOpen(true)} className="ml-auto text-sm">Add user</Button>
         </div>
       </Card>
 
@@ -155,7 +175,7 @@ export default function AdminUsersPage() {
                     {u.role}
                   </Button>
                 </TableCell>
-                <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{formatTimeAgo(u.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="outline"
