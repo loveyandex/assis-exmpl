@@ -41,8 +41,8 @@ function NemoText() {
   return (
     <group ref={textRef}>
       <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[4, 1]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+        {/* <planeGeometry args={[5, 1]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.05} /> */}
       </mesh>
     </group>
   );

@@ -14,9 +14,10 @@ export async function authenticateLdap(userlogon: string, password: string): Pro
   const port = cfg?.port ?? sys?.ldapPort ?? 389;
   const base = cfg?.baseDn ?? sys?.ldapBaseDn;
   const uid = cfg?.uidAttr ?? sys?.ldapUidAttr ?? 'sAMAccountName';
-  console.log('uid', uid);
   const bindDn = cfg?.bindDn ?? sys?.ldapBindDn;
   const bindPassword = cfg?.bindPassword ?? sys?.ldapBindPassword;
+  console.log('ldap json ', { host, port, base, uid, bindDn, bindPassword });
+
   if (!host || !base || !bindDn || !bindPassword) return { ok: false, error: 'LDAP is not configured' };
 
   const { createClient } = await getLdapClient();
@@ -28,14 +29,20 @@ export async function authenticateLdap(userlogon: string, password: string): Pro
 
   const searchAsync = () => new Promise<string | null>((resolve, reject) => {
     const opts = { filter: `(${uid}=${userlogon})`, scope: 'sub' as const };
+    console.log('searchAsync', { base, uid, userlogon, opts });
     client.search(base!, opts, (err: any, res: any) => {
+      console.log('searchAsync error', { err: JSON.stringify(err, null, 2) });
       if (err) return reject(err);
       let dn: string | null = null;
       res.on('searchEntry', (entry: any) => { 
         // Safest way to extract DN as string
+        console.log('searchEntry', { entry });
         dn = entry.dn?.toString() || entry.objectName?.toString() || null; 
       });
-      res.on('error', (e: any) => reject(e));
+      res.on('error', (e: any) => {
+        console.log('searchAsync e', {   e: JSON.stringify(e, null, 2) });
+        reject(e);
+      });
       res.on('end', () => resolve(dn));
     });
   });

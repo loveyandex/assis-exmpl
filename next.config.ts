@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: ".moz", // 👈 changes the build output folder
-  output: "standalone",
+  // output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
   },
