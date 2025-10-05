@@ -28,9 +28,7 @@ export async function GET(req: NextRequest) {
 	const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 	const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 && pageSizeParam <= 100 ? pageSizeParam : 20;
 
-	const where = searchQuery
-		? { username: { contains: searchQuery, mode: 'insensitive' as any } }
-		: undefined;
+	const where = searchQuery ? { username: { contains: searchQuery } } : undefined;
 
 	const total = await prisma.user.count({ where });
 	const users = await prisma.user.findMany({
