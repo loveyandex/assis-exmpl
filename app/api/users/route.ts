@@ -20,17 +20,39 @@ async function requireAdmin(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const users = await prisma.user.findMany({ 
-    orderBy: { createdAt: 'desc' },
-    include: { settings: true }
-  });
-  return NextResponse.json(users.map(u => ({ 
-    id: u.id, 
-    username: u.username, 
-    role: u.role, 
-    createdAt: u.createdAt,
-    gitlabToken: u.settings?.gitlabToken || ''
-  })));
+	const url = new URL(req.url);
+	const pageParam = parseInt(url.searchParams.get('page') || '1', 10);
+	const pageSizeParam = parseInt(url.searchParams.get('pageSize') || '20', 10);
+	const searchQuery = (url.searchParams.get('q') || '').trim();
+
+	const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+	const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 && pageSizeParam <= 100 ? pageSizeParam : 20;
+
+	const where = searchQuery
+		? { username: { contains: searchQuery, mode: 'insensitive' as any } }
+		: undefined;
+
+	const total = await prisma.user.count({ where });
+	const users = await prisma.user.findMany({
+		where,
+		orderBy: { createdAt: 'desc' },
+		skip: (page - 1) * pageSize,
+		take: pageSize,
+		include: { settings: true }
+	});
+
+	return NextResponse.json({
+		items: users.map(u => ({
+			id: u.id,
+			username: u.username,
+			role: u.role,
+			createdAt: u.createdAt,
+			gitlabToken: u.settings?.gitlabToken || ''
+		})),
+		total,
+		page,
+		pageSize,
+	});
 }
 
 export async function POST(req: NextRequest) {

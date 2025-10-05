@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -11,6 +12,10 @@ import { Label } from '@/components/ui/label';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -18,9 +23,13 @@ export default function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ username: '', password: '', gitlabToken: '' });
 
-  async function load() {
+  async function load(p = page, ps = pageSize, q = query) {
     setError('');
-    const res = await fetch('/api/users', { credentials: 'include' });
+    const params = new URLSearchParams();
+    params.set('page', String(p));
+    params.set('pageSize', String(ps));
+    if (q) params.set('q', q);
+    const res = await fetch(`/api/users?${params.toString()}`, { credentials: 'include' });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
       setError(j?.error || 'Failed to load users');
@@ -28,11 +37,14 @@ export default function AdminUsersPage() {
       return;
     }
     const data = await res.json();
-    setUsers(data);
+    setUsers(data.items || []);
+    setTotal(data.total || 0);
+    setPage(data.page || 1);
+    setPageSize(data.pageSize || ps);
     // toast.success('Users loaded');
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(1, pageSize, query); }, []);
 
   async function toggleRole(id: string, role: string) {
     const roles = ['PENDING','USER','ADMIN'];
@@ -99,45 +111,77 @@ export default function AdminUsersPage() {
       {error ? <div className="text-red-500 text-sm">{error}</div> : null}
 
       <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">Create new users</div>
+        <div className="flex items-center gap-3">
+          <Input
+            placeholder="Search by username..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e)=>{ if (e.key === 'Enter') { setPage(1); load(1, pageSize, query); } }}
+            className="max-w-xs"
+          />
+          <Button variant="outline" onClick={()=>{ setPage(1); load(1, pageSize, query); }}>Search</Button>
+          <div className="ml-auto text-sm text-muted-foreground">Create new users</div>
           <Button onClick={() => setCreateOpen(true)}>Add user</Button>
         </div>
       </Card>
 
       <Card className="p-0 overflow-hidden">
-        <div className="divide-y">
-          {users.map(u => (
-            <div key={u.id} className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-                  {u.username.slice(0,2).toUpperCase()}
-                </div>
-                <div>
-                  <div className="font-medium">{u.username}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(u.createdAt).toLocaleString()}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  className={`text-xs px-3 py-1 ${roleButtonClass(u.role)}`}
-                  onClick={()=>toggleRole(u.id, u.role)}
-                >
-                  {u.role}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditModal(u)}
-                >
-                  Edit
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map(u => (
+              <TableRow key={u.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                      {u.username.slice(0,2).toUpperCase()}
+                    </div>
+                    <div className="font-medium">{u.username}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    className={`text-xs px-3 py-1 ${roleButtonClass(u.role)}`}
+                    onClick={()=>toggleRole(u.id, u.role)}
+                  >
+                    {u.role}
+                  </Button>
+                </TableCell>
+                <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditModal(u)}
+                  >
+                    Edit
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
+
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Page {page} of {Math.max(1, Math.ceil(total / pageSize))} · {total} users
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={()=>{ const np = 1; setPage(np); load(np, pageSize, query); }} disabled={page<=1}>First</Button>
+          <Button variant="outline" size="sm" onClick={()=>{ const np = Math.max(1, page-1); setPage(np); load(np, pageSize, query); }} disabled={page<=1}>Prev</Button>
+          <Button variant="outline" size="sm" onClick={()=>{ const np = page+1; const maxPage = Math.max(1, Math.ceil(total / pageSize)); if (np<=maxPage) { setPage(np); load(np, pageSize, query); } }} disabled={page>=Math.max(1, Math.ceil(total / pageSize))}>Next</Button>
+          <Button variant="outline" size="sm" onClick={()=>{ const maxPage = Math.max(1, Math.ceil(total / pageSize)); setPage(maxPage); load(maxPage, pageSize, query); }} disabled={page>=Math.max(1, Math.ceil(total / pageSize))}>Last</Button>
+        </div>
+      </div>
 
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent>

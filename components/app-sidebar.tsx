@@ -17,12 +17,14 @@ import { ThreadList } from "./assistant-ui/thread-list"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [username, setUsername] = React.useState<string>("");
+  const [role, setRole] = React.useState<string>("");
   React.useEffect(() => {
     (async () => {
       try {
         const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ action: 'me', username: 'x', password: 'x' }) });
         const j = await res.json();
         setUsername(j?.user?.username || "");
+        setRole(j?.user?.role || "");
       } catch {}
     })();
   }, []);
@@ -52,19 +54,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarRail />
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin/users">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Settings2 className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">{username ? username : 'Admin'}</span>
-                  <span className="">Manage Users</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {role === 'ADMIN' ? (
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link href="/admin/users">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Settings2 className="size-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="font-semibold">{username ? username : 'Admin'}</span>
+                    <span className="">Manage Users</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ) : null}
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <button onClick={async ()=>{ await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ action: 'logout', username: 'x', password: 'x' }) }); window.location.assign('/login'); }}>
