@@ -1,11 +1,6 @@
 import { getLdapFromCache } from '@/lib/settings-cache';
 import { prisma } from '@/lib/db';
-
-// Dynamic import to avoid bundling when unused
-async function getLdapClient() {
-  const ldap = await import('ldapjs');
-  return ldap;
-}
+import { Client } from 'ldapts';
 
 export async function authenticateLdap(userlogon: string, password: string): Promise<{ ok: boolean; error?: string }>{
   const cfg = getLdapFromCache();
@@ -20,47 +15,27 @@ export async function authenticateLdap(userlogon: string, password: string): Pro
 
   if (!host || !base || !bindDn || !bindPassword) return { ok: false, error: 'LDAP is not configured' };
 
-  const { createClient } = await getLdapClient();
-  const client = createClient({ url: `ldap://${host}:${port}` });
+  const client = new Client({ url: `ldap://${host}:${port}` });
 
-  const bindAsync = () => new Promise<void>((resolve, reject) => {
-    client.bind(bindDn, bindPassword, (err: any) => err ? reject(err) : resolve());
-  });
-
-  const searchAsync = () => new Promise<string | null>((resolve, reject) => {
-    const opts = { filter: `(${uid}=${userlogon})`, scope: 'sub' as const };
-    console.log('searchAsync', { base, uid, userlogon, opts });
-    client.search(base!, opts, (err: any, res: any) => {
-      console.log('searchAsync error', { err: JSON.stringify(err, null, 2) });
-      if (err) return reject(err);
-      let dn: string | null = null;
-      res.on('searchEntry', (entry: any) => { 
-        // Safest way to extract DN as string
-        console.log('searchEntry', { entry });
-        dn = entry.dn?.toString() || entry.objectName?.toString() || null; 
-      });
-      res.on('error', (e: any) => {
-        console.log('searchAsync e', {   e: JSON.stringify(e, null, 2) });
-        reject(e);
-      });
-      res.on('end', () => resolve(dn));
-    });
-  });
-
-  const userBindAsync = (dn: string) => new Promise<void>((resolve, reject) => {
-    client.bind(dn, password, (err: any) => err ? reject(err) : resolve());
-  });
+  const searchAsync = async (): Promise<string | null> => {
+    const filter = `(${uid}=${userlogon})`;
+    console.log('ldapts search', { base, uid, userlogon, filter });
+    const { searchEntries } = await client.search(base!, { scope: 'sub', filter, attributes: ['dn'] });
+    const dn = searchEntries?.[0]?.dn ?? null;
+    console.log('ldapts search result dn', dn);
+    return dn;
+  };
 
   try {
-    await bindAsync();
+    await client.bind(bindDn!, bindPassword!);
     const userDn = await searchAsync();
     if (!userDn) return { ok: false, error: 'User not found in LDAP' };
-    await userBindAsync(userDn);
+    await client.bind(userDn, password);
     return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message || 'LDAP error' };
   } finally {
-    try { (client as any)?.unbind?.(); } catch {}
+    try { await client.unbind(); } catch {}
   }
 }
 
