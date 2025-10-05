@@ -1,0 +1,41 @@
+services:
+  nemo-ai:
+    image: nemo/nemo:v2
+    ports:
+      - "5000:3000"
+      - "5555:5555"
+    environment:
+      OPENAI_BASE_URL: http://ollama:11434/v1
+      OPENAI_API_KEY: dummy-key
+
+      # GitLab configuration
+      GITLAB_URL: ${GITLAB_URL}
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
+
+      # Admin configuration
+      ADMIN_INIT_PASS: ${ADMIN_INIT_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Database configuration  
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - ollama
+    restart: always
+  ollama:
+    image: ollama/ollama
+    container_name: ollama-nemo
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    restart: always
+
+volumes:
+  ollama-data:

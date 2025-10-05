@@ -167,10 +167,11 @@ export async function getGitLabTokenForUser(currentUserId: string, currentUserna
     let gitlabToken = userSettings?.gitlabToken || process.env.GITLAB_TOKEN;
     
     // If no token found, try to auto-generate one
-    if (!gitlabToken) {
-      console.log(`No GitLab token found for user ${currentUsername}, attempting auto-generation...`);
-      gitlabToken = await autoGenerateGitLabToken(currentUserId, currentUsername);
-    }
+    // I am commenting this out for now to surprise stackholders in next version //dont forget to remove this comment in next version when i say to uncomment it
+    // if (!gitlabToken) {
+    //   console.log(`No GitLab token found for user ${currentUsername}, attempting auto-generation...`);
+    //   gitlabToken = await autoGenerateGitLabToken(currentUserId, currentUsername);
+    // }
     
     if (!gitlabToken) {
       throw new Error("GitLab token is not configured. Please set it in settings or contact admin.");

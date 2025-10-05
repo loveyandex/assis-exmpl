@@ -516,7 +516,7 @@ Available capabilities:
 - deleteReadme: Delete README.md files
 - listAllGroups: List all accessible GitLab groups
 
-Important: If GitLab tokens are not configured, the system will automatically attempt to generate them using admin privileges. Ask for required parameters (name, namespaceId) when needed and confirm before creating or deleting resources.`,
+Important: Ask for required parameters (name, namespaceId) when needed and confirm before creating or deleting resources.`,
   });
 
   // ensure stream runs to completion even if client aborts
