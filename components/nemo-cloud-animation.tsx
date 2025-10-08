@@ -2,12 +2,13 @@
 
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Cloud, Environment } from '@react-three/drei';
+import {Cloud, Environment } from '@react-three/drei'; 
 import * as THREE from 'three';
+import LocalCloud from './local-cloud';
 
 function FloatingCloud({ position, speed = 1 }: { position: [number, number, number], speed?: number }) {
   const groupRef = useRef<THREE.Group>(null);
-  
+
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.position.x = position[0] + Math.sin(state.clock.elapsedTime * speed) * 0.5;
@@ -19,6 +20,7 @@ function FloatingCloud({ position, speed = 1 }: { position: [number, number, num
   return (
     <group ref={groupRef}>
       <Cloud
+
         position={[0, 0, 0]}
         speed={0.4}
         opacity={0.6}
@@ -31,7 +33,7 @@ function FloatingCloud({ position, speed = 1 }: { position: [number, number, num
 
 function NemoText() {
   const textRef = useRef<THREE.Group>(null);
-  
+
   useFrame((state) => {
     if (textRef.current) {
       textRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.05;
@@ -65,9 +67,9 @@ function Scene() {
       <ambientLight intensity={0.4} />
       <directionalLight position={[10, 10, 5]} intensity={1} />
       <pointLight position={[-10, -10, -5]} intensity={0.5} color="#4f46e5" />
-      
+
       <NemoText />
-      
+
       {clouds.map((cloud, index) => (
         <FloatingCloud
           key={index}
@@ -75,8 +77,8 @@ function Scene() {
           speed={cloud.speed}
         />
       ))}
-      
-      <Environment preset="night" />
+
+      <Environment files="/assets/dikhololo_night_1k.hdr" />
     </>
   );
 }
