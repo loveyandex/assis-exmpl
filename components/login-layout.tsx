@@ -17,7 +17,7 @@ function NemoCloudFallback() {
           <h2 className="text-6xl font-bold mb-4 text-white/90">NEMO</h2>
           <div className="absolute inset-0 text-6xl font-bold mb-4 text-white/20 blur-sm">NEMO</div>
         </div>
-        <p className="text-xl opacity-75">AI Chat to projects of organization</p>
+        <p className="text-xl opacity-75">AI Chat as Org's projects Manager </p>
         
         {/* Animated cloud elements */}
         <div className="absolute top-1/4 left-1/4 w-16 h-8 bg-white/20 rounded-full animate-pulse"></div>
@@ -68,7 +68,7 @@ export default function LoginLayout({ children, title, subtitle }: LoginLayoutPr
         <div className="hidden lg:block relative w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/20">
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-primary/10" />
           <div className="relative h-full w-full">
-            <Suspense fallback={<NemoCloudFallback />}>
+            <Suspense fallback={<NemoCloudFallback />}> 
               <NemoCloudAnimation />
             </Suspense>
           </div>
@@ -77,7 +77,7 @@ export default function LoginLayout({ children, title, subtitle }: LoginLayoutPr
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-white/80">
               <h2 className="text-4xl font-bold mb-4">Nemo</h2>
-              <p className="text-lg opacity-75">AI Chat to projects of organization</p>
+              <p className="text-lg opacity-75">AI Chat to projects managment of organization</p>
             </div>
           </div>
         </div>

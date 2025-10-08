@@ -2,7 +2,6 @@
 
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import {Cloud, Environment } from '@react-three/drei'; 
 import * as THREE from 'three';
 import LocalCloud from './local-cloud';
 
@@ -19,14 +18,7 @@ function FloatingCloud({ position, speed = 1 }: { position: [number, number, num
 
   return (
     <group ref={groupRef}>
-      <Cloud
-
-        position={[0, 0, 0]}
-        speed={0.4}
-        opacity={0.6}
-        color="#ffffff"
-        segments={20}
-      />
+      <LocalCloud position={[0, 0, 0]} speed={0.4} opacity={0.6} color="#ffffff" segments={20} />
     </group>
   );
 }
@@ -78,7 +70,7 @@ function Scene() {
         />
       ))}
 
-      <Environment files="/assets/dikhololo_night_1k.hdr" />
+      {/* Removed Environment to avoid remote HDRI; use simple lights instead */}
     </>
   );
 }

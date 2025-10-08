@@ -1,6 +1,5 @@
 import { useRef, useMemo } from 'react';
 import { useFrame, extend } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Optional: extend THREE if needed for custom materials
@@ -11,30 +10,38 @@ function LocalCloud({
   speed = 0.4,
   opacity = 0.6,
   color = '#ffffff',
-  segments = 20
+  segments = 20,
+  puffCount = 6
 }: {
   position?: [number, number, number];
   speed?: number;
   opacity?: number;
   color?: string;
   segments?: number;
+  puffCount?: number;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const texture = useTexture('/assets/cloud.png');
 
-  const cloudGeometry = useMemo(() => {
-    const geometry = new THREE.SphereGeometry(1, segments, segments);
-    return geometry;
-  }, [segments]);
+  // Build a cluster of overlapping spheres to approximate a fluffy cloud
+  const puffGeometries = useMemo(() => {
+    const geometries: THREE.SphereGeometry[] = [];
+    for (let i = 0; i < puffCount; i++) {
+      const radius = 0.6 + Math.random() * 0.6; // varied puff sizes
+      geometries.push(new THREE.SphereGeometry(radius, segments, segments));
+    }
+    return geometries;
+  }, [segments, puffCount]);
 
   const cloudMaterial = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
-      map: texture,
+    return new THREE.MeshStandardMaterial({
+      color,
       transparent: true,
       opacity,
-      color
+      roughness: 1,
+      metalness: 0,
+      depthWrite: false
     });
-  }, [texture, opacity, color]);
+  }, [opacity, color]);
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -46,7 +53,22 @@ function LocalCloud({
 
   return (
     <group ref={groupRef} position={position}>
-      <mesh geometry={cloudGeometry} material={cloudMaterial} />
+      {puffGeometries.map((geometry, index) => {
+        // deterministic pseudo-random offsets for stable layout
+        const angle = (index / puffGeometries.length) * Math.PI * 2;
+        const radius = 0.6 + (index % 3) * 0.2;
+        const offsetX = Math.cos(angle) * radius * 0.8 + (index % 2 === 0 ? 0.2 : -0.1);
+        const offsetY = Math.sin(angle) * radius * 0.3 + (index % 2 === 0 ? 0.1 : -0.05);
+        const offsetZ = ((index % 5) - 2) * 0.06;
+        return (
+          <mesh
+            key={index}
+            geometry={geometry}
+            material={cloudMaterial}
+            position={[offsetX, offsetY, offsetZ]}
+          />
+        );
+      })}
     </group>
   );
 }
