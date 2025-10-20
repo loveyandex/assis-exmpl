@@ -1,4 +1,53 @@
+version: '3.8'
+
 services:
+  # OpenLDAP service
+  openldap:
+    image: ghcr.io/rroemhild/docker-test-openldap:master
+    ports:
+      - "10389:10389"
+      - "10636:10636"
+    networks:
+      - gitlabnet
+
+  # GitLab service
+  gitlab:
+    image: ghcr.io/love-solana/from-docker_gitlab:latest 
+    hostname: 'gitlab.local'
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "22:22"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url '${GITLAB_EXTERNAL_URL}'
+        gitlab_rails['ldap_enabled'] = true
+        gitlab_rails['ldap_servers'] = {
+          'main' => {
+            'label' => 'PlanetExpress LDAP',
+            'host' => '${LDAP_HOST}',
+            'port' => ${LDAP_PORT},
+            'uid' => 'uid',
+            'bind_dn' => '${LDAP_BIND_DN}',
+            'password' => '${LDAP_PASSWORD}',
+            'encryption' => 'plain',
+            'base' => '${LDAP_BASE}',
+            'active_directory' => false,
+            'allow_username_or_email_login' => true,
+            'block_auto_created_users' => false
+          }
+        }
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    networks:
+      - gitlabnet
+    depends_on:
+      - openldap
+
+  # Nemo AI service
   nemo-ai:
     image: nemo/nemo:v2
     ports:
@@ -21,6 +70,10 @@ services:
     depends_on:
       - ollama
     restart: always
+    networks:
+      - gitlabnet
+
+  # Ollama service
   ollama:
     image: ollama/ollama
     container_name: ollama-nemo
@@ -36,6 +89,17 @@ services:
               device_ids: ["0"]
               capabilities: [gpu]
     restart: always
+    networks:
+      - gitlabnet
 
+# Volumes
 volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
   ollama-data:
+
+# Networks
+networks:
+  gitlabnet:
+    driver: bridge
