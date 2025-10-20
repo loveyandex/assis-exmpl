@@ -77,7 +77,8 @@ export default function LoginLayout({ children, title, subtitle }: LoginLayoutPr
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-white/80">
               <h2 className="text-4xl font-bold mb-4">Nemo</h2>
-              <p className="text-lg opacity-75">AI Chat to projects managment of organization</p>
+              <p className="text-lg opacity-75">Just Propmt any project you want </p>
+              <p className="text-lg opacity-75">Nemo will create ,manage,guide you to the organization goals</p>
             </div>
           </div>
         </div>
