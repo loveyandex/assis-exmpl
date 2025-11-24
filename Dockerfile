@@ -20,9 +20,9 @@ ENV NEXT_PUBLIC_BACKEND_WS_BASE=${NEXT_PUBLIC_BACKEND_WS_BASE}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Before the prisma migrate step 
-RUN npx prisma migrate reset --force
+RUN npx prisma migrate reset --force --skip-seed
 RUN npx prisma generate
-RUN npx prisma migrate deploy
+# RUN npx prisma migrate deploy
 RUN npm run build
 
 FROM ghcr.io/love-solana/from-docker-node:latest AS runner

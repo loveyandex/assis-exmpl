@@ -10,6 +10,9 @@ docker-compose*.yml
 .env.local
 backend/
 prisma/dev.db
+prisma/dev.db
+prisma/*.db-journal
+
 
 pnpm-lock.yaml
 yarn.lock
